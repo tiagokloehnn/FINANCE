@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAccounts, createAccount } from '@/lib/services/accountsService';
 import { AccountType } from '@prisma/client';
+import { formatDatabaseError } from '@/lib/formatError';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error('Erro ao buscar contas:', error);
     return NextResponse.json(
-      { message: 'Erro ao buscar contas', error: error?.message },
+      { message: formatDatabaseError(error) },
       { status: 500 }
     );
   }
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Erro ao criar conta:', error);
     return NextResponse.json(
-      { message: error?.message || 'Erro ao criar conta' },
+      { message: formatDatabaseError(error) },
       { status: 400 }
     );
   }

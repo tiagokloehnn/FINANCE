@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTransactions, createTransaction } from '@/lib/services/transactionsService';
 import { NatureType } from '@prisma/client';
+import { formatDatabaseError } from '@/lib/formatError';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error('Erro ao buscar transações:', error);
     return NextResponse.json(
-      { message: 'Erro ao buscar transações', error: error?.message },
+      { message: formatDatabaseError(error) },
       { status: 500 }
     );
   }
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Erro ao criar transação:', error);
     return NextResponse.json(
-      { message: error?.message || 'Erro ao criar transação' },
+      { message: formatDatabaseError(error) },
       { status: 400 }
     );
   }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDre } from '@/lib/services/reportsService';
+import { formatDatabaseError } from '@/lib/formatError';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error('Erro ao gerar relatório DRE:', error);
     return NextResponse.json(
-      { message: 'Erro ao gerar DRE', error: error?.message },
+      { message: formatDatabaseError(error) },
       { status: 500 }
     );
   }

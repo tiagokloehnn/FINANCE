@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { seedDatabase } from '@/lib/services/seedService';
+import { formatDatabaseError } from '@/lib/formatError';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Erro ao executar seed da API:', error);
     return NextResponse.json(
-      { message: 'Erro ao inicializar banco de dados', error: error?.message },
+      { message: formatDatabaseError(error) },
       { status: 500 }
     );
   }
@@ -26,7 +27,7 @@ export async function GET() {
   } catch (error: any) {
     console.error('Erro ao verificar/inicializar banco de dados:', error);
     return NextResponse.json(
-      { message: 'Erro ao inicializar banco de dados', error: error?.message },
+      { message: formatDatabaseError(error) },
       { status: 500 }
     );
   }
