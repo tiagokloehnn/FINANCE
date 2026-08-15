@@ -1,0 +1,81 @@
+// Prisma Schema para Sistema de Gestão Financeira Pessoal com Governança Corporativa
+// Otimizado para PostgreSQL Serverless (Supabase Connection Pooling & Direct URL)
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum NatureType {
+  INCOME
+  FIXED_COST
+  VARIABLE_COST
+  INVESTMENT
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+  INVESTMENT
+  CASH
+}
+
+model User {
+  id         String     @id @default(uuid())
+  email      String     @unique
+  name       String
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+  accounts   Account[]
+  categories Category[]
+
+  @@map("users")
+}
+
+model Account {
+  id           String        @id @default(uuid())
+  userId       String        @map("user_id")
+  name         String
+  type         AccountType   @default(CHECKING)
+  balance      Float         @default(0.0)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@map("accounts")
+}
+
+model Category {
+  id           String        @id @default(uuid())
+  userId       String        @map("user_id")
+  name         String
+  natureType   NatureType    @map("nature_type")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@map("categories")
+}
+
+model Transaction {
+  id          String    @id @default(uuid())
+  accountId   String    @map("account_id")
+  categoryId  String    @map("category_id")
+  amount      Float
+  date        DateTime  @default(now())
+  description String
+  isRealized  Boolean   @default(true) @map("is_realized")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  account     Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@map("transactions")
+}
