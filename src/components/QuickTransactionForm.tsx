@@ -153,41 +153,41 @@ export function QuickTransactionForm({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full max-w-lg bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden p-6 sm:p-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-y-auto max-h-[92vh] p-4 sm:p-7 my-auto">
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-          <div className="flex items-center space-x-2.5">
-            <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400">
+        <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-slate-800">
+          <div className="flex items-center space-x-2.5 min-w-0">
+            <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 shrink-0">
               <PlusCircle className="h-5 w-5" />
             </div>
-            <div>
-              <h2 className="text-base font-bold text-white">
+            <div className="min-w-0">
+              <h2 className="text-sm sm:text-base font-bold text-white truncate">
                 Lançamento Financeiro Rápido
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-[10px] sm:text-xs text-slate-400 truncate">
                 Classificação automática para apuração de DRE
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition shrink-0"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {errorMsg && (
-          <div className="mt-4 p-3 rounded-lg bg-rose-950/50 border border-rose-800 text-xs text-rose-300">
+          <div className="mt-3 sm:mt-4 p-3 rounded-lg bg-rose-950/50 border border-rose-800 text-xs text-rose-300">
             {errorMsg}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-4 sm:mt-5 space-y-3.5 sm:space-y-4">
           {/* Nature Selector Pills */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+            <label className="block text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
               Natureza Contábil
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -196,27 +196,27 @@ export function QuickTransactionForm({
                   type="button"
                   key={item.type}
                   onClick={() => setSelectedNature(item.type)}
-                  className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border text-xs font-medium transition ${
+                  className={`flex flex-col items-center justify-center py-2 px-1.5 sm:py-2.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-medium transition ${
                     selectedNature === item.type
                       ? item.activeClasses
                       : `border-slate-800 bg-slate-950/40 text-slate-400 ${item.colorClasses}`
                   }`}
                 >
                   <span className="mb-1">{item.icon}</span>
-                  <span>{item.label}</span>
+                  <span className="truncate">{item.label}</span>
                 </button>
               ))}
             </div>
           </div>
 
           {/* Amount & Date */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-400 mb-1">
                 Valor (R$)
               </label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 font-mono-numbers">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 font-mono-numbers text-sm">
                   R$
                 </span>
                 <input
@@ -227,7 +227,7 @@ export function QuickTransactionForm({
                   placeholder="0,00"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono-numbers font-bold placeholder-slate-600 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-base"
+                  className="w-full pl-9 sm:pl-10 pr-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono-numbers font-bold placeholder-slate-600 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-sm sm:text-base"
                 />
               </div>
             </div>
@@ -242,7 +242,7 @@ export function QuickTransactionForm({
                   required
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                  className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs sm:text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
                 />
               </div>
             </div>
@@ -259,12 +259,12 @@ export function QuickTransactionForm({
               placeholder="Ex: Aluguel mensal, Supermercado, Aporte FIIs..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-sm placeholder-slate-600 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+              className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs sm:text-sm placeholder-slate-600 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
             />
           </div>
 
           {/* Category & Account */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-400 mb-1">
                 Categoria Contábil
@@ -301,38 +301,38 @@ export function QuickTransactionForm({
           </div>
 
           {/* Realized Toggle */}
-          <div className="flex items-center space-x-3 pt-2">
+          <div className="flex items-start space-x-2.5 sm:space-x-3 pt-1 sm:pt-2">
             <input
               type="checkbox"
               id="isRealized"
               checked={isRealized}
               onChange={(e) => setIsRealized(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-700 bg-slate-950 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-slate-900"
+              className="h-4 w-4 mt-0.5 rounded border-slate-700 bg-slate-950 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-slate-900 shrink-0"
             />
-            <label htmlFor="isRealized" className="text-xs text-slate-300 cursor-pointer">
+            <label htmlFor="isRealized" className="text-[11px] sm:text-xs text-slate-300 cursor-pointer">
               Lançamento já liquidado / realizado (impacta saldo de caixa imediatamente)
             </label>
           </div>
 
           {/* Submit Action */}
-          <div className="pt-4 flex items-center justify-end space-x-3 border-t border-slate-800">
+          <div className="pt-3 sm:pt-4 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 border-t border-slate-800">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl bg-slate-800 text-xs font-semibold text-slate-300 hover:bg-slate-700 transition"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 text-xs font-semibold text-slate-300 hover:bg-slate-700 transition text-center"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2.5 rounded-xl font-bold text-xs text-slate-950 bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 transition shadow-lg shadow-cyan-500/20 disabled:opacity-50 flex items-center space-x-2"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold text-xs text-slate-950 bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 transition shadow-lg shadow-cyan-500/20 disabled:opacity-50 flex items-center justify-center space-x-2"
             >
               {isSubmitting ? (
                 <span>Gravando...</span>
               ) : (
                 <>
-                  <Check className="h-4 w-4" />
+                  <Check className="h-4 w-4 shrink-0" />
                   <span>Confirmar Lançamento</span>
                 </>
               )}

@@ -127,19 +127,19 @@ export default function DashboardPage() {
         isLoading={isLoading}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-4 sm:space-y-8">
         {/* Banner de Inicialização Rápida no Supabase (se necessário) */}
         {categories.length === 0 && (
-          <div className="rounded-2xl bg-gradient-to-r from-cyan-950/70 via-indigo-950/70 to-slate-900 border-2 border-cyan-500/50 p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-glow-cyan">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 rounded-xl bg-cyan-500/20 text-cyan-400">
-                <Database className="h-6 w-6" />
+          <div className="rounded-2xl bg-gradient-to-r from-cyan-950/70 via-indigo-950/70 to-slate-900 border-2 border-cyan-500/50 p-4 sm:p-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 shadow-glow-cyan">
+            <div className="flex items-start sm:items-center space-x-3 sm:space-x-4">
+              <div className="p-2.5 sm:p-3 rounded-xl bg-cyan-500/20 text-cyan-400 shrink-0">
+                <Database className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-white">
+                <h3 className="text-sm sm:text-base font-bold text-white">
                   Banco de Dados Conectado no Supabase!
                 </h3>
-                <p className="text-xs text-slate-300 mt-0.5">
+                <p className="text-[11px] sm:text-xs text-slate-300 mt-0.5">
                   Clique no botão ao lado para criar o plano de contas e categorias contábeis padrão (DRE, Liquidez, Runway).
                 </p>
               </div>
@@ -147,7 +147,7 @@ export default function DashboardPage() {
             <button
               onClick={handleTriggerSeed}
               disabled={isSeeding}
-              className="px-5 py-2.5 rounded-xl font-bold text-xs text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 transition shadow-lg whitespace-nowrap disabled:opacity-50 flex items-center space-x-2"
+              className="w-full sm:w-auto px-4 sm:px-5 py-2.5 rounded-xl font-bold text-xs text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 transition shadow-lg whitespace-nowrap disabled:opacity-50 flex items-center justify-center space-x-2 shrink-0"
             >
               <Sparkles className="h-4 w-4" />
               <span>{isSeeding ? 'Inicializando...' : '⚡ Inicializar Categorias Padrão'}</span>
@@ -156,31 +156,31 @@ export default function DashboardPage() {
         )}
 
         {seedSuccessMessage && (
-          <div className="p-4 rounded-xl bg-emerald-950/60 border border-emerald-500/50 flex items-center space-x-3 text-emerald-300 text-xs animate-fadeIn">
-            <CheckCircle className="h-4 w-4 text-emerald-400" />
+          <div className="p-3.5 sm:p-4 rounded-xl bg-emerald-950/60 border border-emerald-500/50 flex items-center space-x-3 text-emerald-300 text-xs animate-fadeIn">
+            <CheckCircle className="h-4 w-4 text-emerald-400 shrink-0" />
             <span>{seedSuccessMessage}</span>
           </div>
         )}
 
         {/* Banner Executivo de Governança */}
-        <div className="rounded-2xl bg-gradient-to-r from-cyan-950/40 via-slate-900/60 to-indigo-950/40 border border-slate-800/80 p-6 sm:p-7 relative overflow-hidden backdrop-blur-md">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+        <div className="rounded-2xl bg-gradient-to-r from-cyan-950/40 via-slate-900/60 to-indigo-950/40 border border-slate-800/80 p-4 sm:p-7 relative overflow-hidden backdrop-blur-md">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 relative z-10">
             <div>
-              <div className="flex items-center space-x-2 text-cyan-400 text-xs font-semibold uppercase tracking-wider">
-                <ShieldCheck className="h-4 w-4" />
+              <div className="flex items-center space-x-1.5 sm:space-x-2 text-cyan-400 text-[10px] sm:text-xs font-semibold uppercase tracking-wider">
+                <ShieldCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span>Painel de Controle Financeiro & Governança</span>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-1 tracking-tight">
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white mt-1 tracking-tight">
                 Visão Geral da Saúde Financeira
               </h2>
-              <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl">
+              <p className="text-[11px] sm:text-xs md:text-sm text-slate-400 mt-1 max-w-2xl">
                 Cálculo em tempo real de liquidez disponível, margem de poupança operacional corporativa e autonomia de sobrevivência (Runway) hospedado 100% na Vercel + Supabase.
               </p>
             </div>
 
-            <div className="flex items-center space-x-3">
-              <div className="px-4 py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center space-x-2 text-xs text-slate-300">
-                <Calendar className="h-4 w-4 text-cyan-400" />
+            <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+              <div className="px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center space-x-2 text-[11px] sm:text-xs text-slate-300">
+                <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-cyan-400" />
                 <span>Competência: Mês Atual</span>
               </div>
             </div>
@@ -188,7 +188,7 @@ export default function DashboardPage() {
         </div>
 
         {/* 3 HERO METRICS CARDS */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
           {/* KPI 1: Liquidez Corrente (Caixa Livre) */}
           <MetricCard
             type="liquidity"
@@ -282,7 +282,7 @@ export default function DashboardPage() {
       />
 
       {/* Footer */}
-      <footer className="border-t border-slate-900 bg-slate-950/60 py-6 text-center text-xs text-slate-500">
+      <footer className="border-t border-slate-900 bg-slate-950/60 py-5 sm:py-6 px-4 text-center text-xs text-slate-500">
         <p>
           Finance CFO • Sistema de Gestão Financeira Pessoal com Governança Corporativa • Hospedado 100% no Vercel & Supabase
         </p>

@@ -34,13 +34,13 @@ export function MetricCard({
   const getIcon = () => {
     switch (type) {
       case 'liquidity':
-        return <Wallet className="h-5 w-5 text-cyan-400" />;
+        return <Wallet className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-400" />;
       case 'savings_margin':
-        return <PieChart className="h-5 w-5 text-emerald-400" />;
+        return <PieChart className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400" />;
       case 'runway':
-        return <Hourglass className="h-5 w-5 text-indigo-400" />;
+        return <Hourglass className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-400" />;
       default:
-        return <Activity className="h-5 w-5 text-cyan-400" />;
+        return <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-400" />;
     }
   };
 
@@ -74,25 +74,25 @@ export function MetricCard({
 
   return (
     <div
-      className={`glass-panel-interactive rounded-2xl p-6 relative overflow-hidden transition-all duration-300 ${getGlowClass()}`}
+      className={`glass-panel-interactive rounded-2xl p-4 sm:p-6 relative overflow-hidden transition-all duration-300 ${getGlowClass()}`}
     >
       {/* Top Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/50">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
+          <div className="p-2 sm:p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/50 shrink-0">
             {getIcon()}
           </div>
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <div className="min-w-0">
+            <h3 className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-400 truncate">
               {title}
             </h3>
-            <p className="text-[11px] text-slate-500">{subtitle}</p>
+            <p className="text-[10px] sm:text-[11px] text-slate-500 truncate">{subtitle}</p>
           </div>
         </div>
 
         {badgeText && (
           <span
-            className={`px-2.5 py-1 text-[10px] font-bold tracking-wide uppercase rounded-full border ${getBadgeColors()}`}
+            className={`px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[10px] font-bold tracking-wide uppercase rounded-full border shrink-0 whitespace-nowrap ${getBadgeColors()}`}
           >
             {badgeText}
           </span>
@@ -100,12 +100,12 @@ export function MetricCard({
       </div>
 
       {/* Main Metric Value */}
-      <div className="mt-5">
-        <div className="text-3xl font-extrabold font-mono-numbers text-white tracking-tight">
+      <div className="mt-4 sm:mt-5">
+        <div className="text-2xl sm:text-3xl font-extrabold font-mono-numbers text-white tracking-tight break-words">
           {mainValue}
         </div>
         {secondaryInfo && (
-          <div className="mt-1.5 text-xs text-slate-400 flex items-center space-x-1.5">
+          <div className="mt-1 sm:mt-1.5 text-[11px] sm:text-xs text-slate-400 flex items-center space-x-1.5">
             <span>{secondaryInfo}</span>
           </div>
         )}
@@ -113,8 +113,8 @@ export function MetricCard({
 
       {/* Optional Progress Bar */}
       {progressPercentage !== undefined && (
-        <div className="mt-4">
-          <div className="flex justify-between text-[11px] font-medium text-slate-400 mb-1.5">
+        <div className="mt-3 sm:mt-4">
+          <div className="flex justify-between text-[10px] sm:text-[11px] font-medium text-slate-400 mb-1.5">
             <span>Eficiência Operacional</span>
             <span className="font-mono-numbers text-emerald-400">
               {Math.min(100, Math.max(0, progressPercentage))}%
@@ -133,14 +133,14 @@ export function MetricCard({
 
       {/* Breakdown Items List */}
       {breakdownItems && breakdownItems.length > 0 && (
-        <div className="mt-5 pt-4 border-t border-slate-800/70 space-y-2">
+        <div className="mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-slate-800/70 space-y-2">
           {breakdownItems.map((item, idx) => (
             <div
               key={idx}
-              className="flex items-center justify-between text-xs"
+              className="flex items-center justify-between text-xs gap-2"
             >
-              <span className="text-slate-400">{item.label}</span>
-              <span className="font-medium font-mono-numbers text-slate-200">
+              <span className="text-slate-400 truncate text-[11px] sm:text-xs">{item.label}</span>
+              <span className="font-medium font-mono-numbers text-slate-200 shrink-0 text-[11px] sm:text-xs">
                 {item.value}
               </span>
             </div>
