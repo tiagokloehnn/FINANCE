@@ -12,6 +12,11 @@ export async function getCategories(userId?: string) {
   const where = userId ? { userId } : {};
   return prisma.category.findMany({
     where,
+    include: {
+      _count: {
+        select: { transactions: true },
+      },
+    },
     orderBy: [{ natureType: 'asc' }, { name: 'asc' }],
   });
 }
@@ -32,5 +37,34 @@ export async function createCategory(data: { name: string; natureType: NatureTyp
       natureType: data.natureType,
       userId: user!.id,
     },
+    include: {
+      _count: {
+        select: { transactions: true },
+      },
+    },
+  });
+}
+
+export async function updateCategory(
+  id: string,
+  data: { name?: string; natureType?: NatureType }
+) {
+  return prisma.category.update({
+    where: { id },
+    data: {
+      ...(data.name && { name: data.name.trim() }),
+      ...(data.natureType && { natureType: data.natureType }),
+    },
+    include: {
+      _count: {
+        select: { transactions: true },
+      },
+    },
+  });
+}
+
+export async function deleteCategory(id: string) {
+  return prisma.category.delete({
+    where: { id },
   });
 }

@@ -15,6 +15,7 @@ import {
   PiggyBank,
   Check,
   Sparkles,
+  Plus,
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -50,6 +51,11 @@ export function QuickTransactionForm({
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isSeedingLocal, setIsSeedingLocal] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Criar categoria rápida inline
+  const [isCreatingQuickCat, setIsCreatingQuickCat] = useState<boolean>(false);
+  const [quickCatName, setQuickCatName] = useState<string>('');
+  const [isSubmittingQuickCat, setIsSubmittingQuickCat] = useState<boolean>(false);
 
   // Filtra categorias pela natureza selecionada
   const filteredCategories = categories.filter(
@@ -87,6 +93,28 @@ export function QuickTransactionForm({
       setErrorMsg(err?.message || 'Erro ao inicializar plano de contas no Supabase.');
     } finally {
       setIsSeedingLocal(false);
+    }
+  };
+
+  const handleQuickCreateCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickCatName.trim()) return;
+
+    try {
+      setIsSubmittingQuickCat(true);
+      setErrorMsg(null);
+      const newCat = await api.createCategory({
+        name: quickCatName.trim(),
+        natureType: selectedNature,
+      });
+      setQuickCatName('');
+      setIsCreatingQuickCat(false);
+      onSubmitSuccess();
+      setCategoryId(newCat.id);
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Erro ao criar categoria rápida.');
+    } finally {
+      setIsSubmittingQuickCat(false);
     }
   };
 
@@ -311,27 +339,63 @@ export function QuickTransactionForm({
                 <label className="block text-xs font-semibold text-slate-400">
                   Categoria Contábil
                 </label>
-                {onOpenManageEntities && (
+                <div className="flex items-center space-x-2">
                   <button
                     type="button"
-                    onClick={onOpenManageEntities}
-                    className="text-[10px] text-cyan-400 hover:text-cyan-300 transition flex items-center space-x-1"
+                    onClick={() => setIsCreatingQuickCat(!isCreatingQuickCat)}
+                    className="text-[10px] text-cyan-400 hover:text-cyan-300 font-semibold transition flex items-center space-x-1"
                   >
-                    <span>+ Nova</span>
+                    <span>{isCreatingQuickCat ? 'Cancelar' : '+ Nova Rápida'}</span>
                   </button>
-                )}
+                  {onOpenManageEntities && (
+                    <button
+                      type="button"
+                      onClick={onOpenManageEntities}
+                      className="text-[10px] text-slate-400 hover:text-slate-200 transition"
+                      title="Gerenciar todas as categorias"
+                    >
+                      Gerenciar
+                    </button>
+                  )}
+                </div>
               </div>
-              <select
-                value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
-              >
-                {filteredCategories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+
+              {isCreatingQuickCat ? (
+                <div className="flex items-center space-x-1.5 animate-fadeIn">
+                  <input
+                    type="text"
+                    autoFocus
+                    placeholder="Nome da nova categoria..."
+                    value={quickCatName}
+                    onChange={(e) => setQuickCatName(e.target.value)}
+                    className="w-full px-2.5 py-2 rounded-xl bg-slate-950 border border-cyan-500 text-white text-xs placeholder-slate-500 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleQuickCreateCategory}
+                    disabled={isSubmittingQuickCat || !quickCatName.trim()}
+                    className="px-3 py-2 rounded-xl text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 transition shadow disabled:opacity-50 shrink-0"
+                  >
+                    {isSubmittingQuickCat ? '...' : 'Criar'}
+                  </button>
+                </div>
+              ) : (
+                <select
+                  value={categoryId}
+                  onChange={(e) => setCategoryId(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                >
+                  {filteredCategories.length === 0 ? (
+                    <option value="">Nenhuma categoria encontrada - Clique em + Nova</option>
+                  ) : (
+                    filteredCategories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))
+                  )}
+                </select>
+              )}
             </div>
 
             <div>

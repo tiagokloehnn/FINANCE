@@ -168,6 +168,32 @@ export const api = {
     return errorData;
   },
 
+  async updateCategory(
+    id: string,
+    payload: { name?: string; natureType?: NatureType }
+  ): Promise<Category> {
+    const res = await fetch(`${API_BASE_URL}/categories/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.message || 'Erro ao atualizar categoria');
+    }
+    return data;
+  },
+
+  async deleteCategory(id: string): Promise<void> {
+    const res = await fetch(`${API_BASE_URL}/categories/${id}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Erro ao excluir categoria');
+    }
+  },
+
   async createAccount(payload: { name: string; type: AccountType; balance?: number }): Promise<Account> {
     const res = await fetch(`${API_BASE_URL}/accounts`, {
       method: 'POST',
@@ -179,6 +205,32 @@ export const api = {
       throw new Error(errorData.message || 'Erro ao criar conta financeira');
     }
     return errorData;
+  },
+
+  async updateAccount(
+    id: string,
+    payload: { name?: string; type?: AccountType; balance?: number }
+  ): Promise<Account> {
+    const res = await fetch(`${API_BASE_URL}/accounts/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.message || 'Erro ao atualizar conta');
+    }
+    return data;
+  },
+
+  async deleteAccount(id: string): Promise<void> {
+    const res = await fetch(`${API_BASE_URL}/accounts/${id}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Erro ao excluir conta');
+    }
   },
 
   async createTransaction(payload: CreateTransactionPayload): Promise<Transaction> {

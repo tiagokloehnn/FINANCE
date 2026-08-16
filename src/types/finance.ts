@@ -13,6 +13,9 @@ export interface Account {
   name: string;
   type: AccountType;
   balance: number;
+  _count?: {
+    transactions: number;
+  };
 }
 
 export interface Category {
@@ -20,6 +23,9 @@ export interface Category {
   userId: string;
   name: string;
   natureType: NatureType;
+  _count?: {
+    transactions: number;
+  };
 }
 
 export interface Transaction {

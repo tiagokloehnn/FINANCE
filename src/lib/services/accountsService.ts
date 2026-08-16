@@ -12,6 +12,11 @@ export async function getAccounts(userId?: string) {
   const where = userId ? { userId } : {};
   return prisma.account.findMany({
     where,
+    include: {
+      _count: {
+        select: { transactions: true },
+      },
+    },
     orderBy: { name: 'asc' },
   });
 }
@@ -38,5 +43,35 @@ export async function createAccount(data: {
       balance: data.balance ?? 0,
       userId: user!.id,
     },
+    include: {
+      _count: {
+        select: { transactions: true },
+      },
+    },
+  });
+}
+
+export async function updateAccount(
+  id: string,
+  data: { name?: string; type?: AccountType; balance?: number }
+) {
+  return prisma.account.update({
+    where: { id },
+    data: {
+      ...(data.name && { name: data.name.trim() }),
+      ...(data.type && { type: data.type }),
+      ...(data.balance !== undefined && { balance: data.balance }),
+    },
+    include: {
+      _count: {
+        select: { transactions: true },
+      },
+    },
+  });
+}
+
+export async function deleteAccount(id: string) {
+  return prisma.account.delete({
+    where: { id },
   });
 }

@@ -22,6 +22,9 @@ import {
   Coins,
   Landmark,
   Sparkles,
+  Trash2,
+  Pencil,
+  Check,
 } from 'lucide-react';
 
 interface ManageEntitiesModalProps {
@@ -40,14 +43,22 @@ export function ManageEntitiesModal({
   onRefresh,
 }: ManageEntitiesModalProps) {
   const [activeTab, setActiveTab] = useState<'categories' | 'accounts'>('categories');
+  const [categoryFilter, setCategoryFilter] = useState<'ALL' | NatureType>('VARIABLE_COST');
   const [isSeeding, setIsSeeding] = useState(false);
 
   // Form Categoria
   const [newCatName, setNewCatName] = useState('');
-  const [newCatNature, setNewCatNature] = useState<NatureType>('FIXED_COST');
+  const [newCatNature, setNewCatNature] = useState<NatureType>('VARIABLE_COST');
   const [isSubmittingCat, setIsSubmittingCat] = useState(false);
   const [catSuccessMsg, setCatSuccessMsg] = useState<string | null>(null);
   const [catErrorMsg, setCatErrorMsg] = useState<string | null>(null);
+
+  // Edição Categoria
+  const [editingCatId, setEditingCatId] = useState<string | null>(null);
+  const [editCatName, setEditCatName] = useState('');
+  const [editCatNature, setEditCatNature] = useState<NatureType>('VARIABLE_COST');
+  const [isUpdatingCat, setIsUpdatingCat] = useState(false);
+  const [deletingCatId, setDeletingCatId] = useState<string | null>(null);
 
   // Form Conta
   const [newAccName, setNewAccName] = useState('');
@@ -56,6 +67,7 @@ export function ManageEntitiesModal({
   const [isSubmittingAcc, setIsSubmittingAcc] = useState(false);
   const [accSuccessMsg, setAccSuccessMsg] = useState<string | null>(null);
   const [accErrorMsg, setAccErrorMsg] = useState<string | null>(null);
+  const [deletingAccId, setDeletingAccId] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -66,7 +78,7 @@ export function ManageEntitiesModal({
       setAccErrorMsg(null);
       await api.triggerSeed(false);
       await onRefresh();
-      setCatSuccessMsg('Plano padrão de categorias e contas inicializado no Supabase com sucesso!');
+      setCatSuccessMsg('Plano padrão de categorias e contas restaurado no Supabase com sucesso!');
       setTimeout(() => setCatSuccessMsg(null), 5000);
     } catch (err: any) {
       setCatErrorMsg(err?.message || 'Erro ao inicializar plano de contas.');
@@ -90,13 +102,62 @@ export function ManageEntitiesModal({
         natureType: newCatNature,
       });
       setNewCatName('');
-      setCatSuccessMsg('Categoria contábil criada com sucesso!');
+      setCatSuccessMsg(`Categoria "${newCatName.trim()}" criada com sucesso!`);
       await onRefresh();
       setTimeout(() => setCatSuccessMsg(null), 4000);
     } catch (err: any) {
       setCatErrorMsg(err?.message || 'Erro ao criar categoria.');
     } finally {
       setIsSubmittingCat(false);
+    }
+  };
+
+  const handleStartEditCat = (cat: Category) => {
+    setEditingCatId(cat.id);
+    setEditCatName(cat.name);
+    setEditCatNature(cat.natureType);
+  };
+
+  const handleSaveEditCat = async (id: string) => {
+    if (!editCatName.trim()) return;
+    try {
+      setIsUpdatingCat(true);
+      setCatErrorMsg(null);
+      await api.updateCategory(id, {
+        name: editCatName.trim(),
+        natureType: editCatNature,
+      });
+      setEditingCatId(null);
+      setCatSuccessMsg('Categoria atualizada com sucesso!');
+      await onRefresh();
+      setTimeout(() => setCatSuccessMsg(null), 4000);
+    } catch (err: any) {
+      setCatErrorMsg(err?.message || 'Erro ao atualizar categoria.');
+    } finally {
+      setIsUpdatingCat(false);
+    }
+  };
+
+  const handleDeleteCategory = async (cat: Category) => {
+    const txCount = cat._count?.transactions ?? 0;
+    const confirmText =
+      txCount > 0
+        ? `A categoria "${cat.name}" possui ${txCount} lançamento(s) vinculado(s). Ao excluí-la, esses lançamentos também serão removidos. Deseja continuar?`
+        : `Deseja realmente excluir a categoria "${cat.name}"?`;
+
+    if (!window.confirm(confirmText)) return;
+
+    try {
+      setDeletingCatId(cat.id);
+      setCatErrorMsg(null);
+      await api.deleteCategory(cat.id);
+      setCatSuccessMsg(`Categoria "${cat.name}" excluída com sucesso!`);
+      await onRefresh();
+      setTimeout(() => setCatSuccessMsg(null), 4000);
+    } catch (err: any) {
+      setCatErrorMsg(err?.message || 'Erro ao excluir categoria.');
+    } finally {
+      setDeletingCatId(null);
     }
   };
 
@@ -128,11 +189,34 @@ export function ManageEntitiesModal({
     }
   };
 
-  const natureLabels: Record<NatureType, { label: string; bg: string; text: string }> = {
-    INCOME: { label: 'Receita', bg: 'bg-emerald-950/60 border-emerald-500/40', text: 'text-emerald-400' },
-    FIXED_COST: { label: 'Custo Fixo', bg: 'bg-rose-950/60 border-rose-500/40', text: 'text-rose-400' },
-    VARIABLE_COST: { label: 'Custo Variável', bg: 'bg-amber-950/60 border-amber-500/40', text: 'text-amber-400' },
-    INVESTMENT: { label: 'Investimento', bg: 'bg-cyan-950/60 border-cyan-500/40', text: 'text-cyan-400' },
+  const handleDeleteAccount = async (acc: Account) => {
+    const txCount = acc._count?.transactions ?? 0;
+    const confirmText =
+      txCount > 0
+        ? `A conta "${acc.name}" possui ${txCount} lançamento(s) vinculado(s). Deseja realmente excluí-la?`
+        : `Deseja realmente excluir a conta "${acc.name}"?`;
+
+    if (!window.confirm(confirmText)) return;
+
+    try {
+      setDeletingAccId(acc.id);
+      setAccErrorMsg(null);
+      await api.deleteAccount(acc.id);
+      setAccSuccessMsg(`Conta "${acc.name}" excluída com sucesso!`);
+      await onRefresh();
+      setTimeout(() => setAccSuccessMsg(null), 4000);
+    } catch (err: any) {
+      setAccErrorMsg(err?.message || 'Erro ao excluir conta.');
+    } finally {
+      setDeletingAccId(null);
+    }
+  };
+
+  const natureLabels: Record<NatureType, { label: string; bg: string; text: string; border: string }> = {
+    INCOME: { label: 'Receita', bg: 'bg-emerald-950/60', text: 'text-emerald-400', border: 'border-emerald-500/40' },
+    FIXED_COST: { label: 'Custo Fixo', bg: 'bg-rose-950/60', text: 'text-rose-400', border: 'border-rose-500/40' },
+    VARIABLE_COST: { label: 'Custo Variável', bg: 'bg-amber-950/60', text: 'text-amber-400', border: 'border-amber-500/40' },
+    INVESTMENT: { label: 'Investimento', bg: 'bg-cyan-950/60', text: 'text-cyan-400', border: 'border-cyan-500/40' },
   };
 
   const accountTypeLabels: Record<AccountType, { label: string; icon: React.ReactNode }> = {
@@ -142,21 +226,31 @@ export function ManageEntitiesModal({
     CASH: { label: 'Dinheiro Físico', icon: <Wallet className="h-4 w-4 text-amber-400" /> },
   };
 
+  const filteredCategories = categories.filter((cat) => {
+    if (categoryFilter === 'ALL') return true;
+    return cat.natureType === categoryFilter;
+  });
+
+  const variableCostCount = categories.filter((c) => c.natureType === 'VARIABLE_COST').length;
+  const fixedCostCount = categories.filter((c) => c.natureType === 'FIXED_COST').length;
+  const incomeCount = categories.filter((c) => c.natureType === 'INCOME').length;
+  const investmentCount = categories.filter((c) => c.natureType === 'INVESTMENT').length;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-4 sm:p-6 max-h-[90vh] flex flex-col">
+      <div className="relative w-full max-w-3xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-4 sm:p-6 max-h-[92vh] flex flex-col">
         {/* Header do Modal */}
-        <div className="flex items-center justify-between pb-4 border-b border-slate-800 shrink-0">
+        <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-slate-800 shrink-0">
           <div className="flex items-center space-x-3">
             <div className="p-2.5 rounded-xl bg-gradient-to-br from-cyan-500/20 to-indigo-500/20 border border-cyan-500/30 text-cyan-400">
               <FolderPlus className="h-5 w-5" />
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold text-white">
-                Gerenciar Contas & Categorias
+                Gerenciar Categorias & Contas
               </h2>
               <p className="text-xs text-slate-400">
-                Personalize o plano de contas e estrutura da sua DRE corporativa
+                Crie novos custos variáveis, exclua categorias não utilizadas e personalize sua DRE
               </p>
             </div>
           </div>
@@ -168,14 +262,14 @@ export function ManageEntitiesModal({
           </button>
         </div>
 
-        {/* Abas */}
-        <div className="flex space-x-2 my-4 border-b border-slate-800/80 pb-2 shrink-0">
+        {/* Abas Principais */}
+        <div className="flex space-x-2 my-3 sm:my-4 border-b border-slate-800/80 pb-2 shrink-0">
           <button
             type="button"
             onClick={() => setActiveTab('categories')}
-            className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-xs font-semibold transition ${
+            className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition ${
               activeTab === 'categories'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
             }`}
           >
@@ -185,9 +279,9 @@ export function ManageEntitiesModal({
           <button
             type="button"
             onClick={() => setActiveTab('accounts')}
-            className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-xs font-semibold transition ${
+            className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition ${
               activeTab === 'accounts'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
             }`}
           >
@@ -197,7 +291,7 @@ export function ManageEntitiesModal({
         </div>
 
         {/* Conteúdo com Scroll */}
-        <div className="flex-1 overflow-y-auto pr-1 space-y-5">
+        <div className="flex-1 overflow-y-auto pr-1 space-y-4">
           {/* Card de Inicialização / Restauração do Plano Padrão */}
           <div className="p-3.5 rounded-xl bg-gradient-to-r from-cyan-950/40 via-indigo-950/40 to-slate-900 border border-cyan-500/30 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             <div className="flex items-center space-x-2.5">
@@ -206,10 +300,10 @@ export function ManageEntitiesModal({
               </div>
               <div>
                 <h4 className="text-xs font-bold text-white">
-                  Plano Padrão DRE & Liquidez (Supabase)
+                  Restaurar Plano Padrão (DRE & Liquidez)
                 </h4>
                 <p className="text-[11px] text-slate-400">
-                  Cria todas as contas essenciais e categorias de DRE no banco de dados.
+                  Garante que todas as categorias e contas essenciais padrão estejam criadas.
                 </p>
               </div>
             </div>
@@ -220,14 +314,14 @@ export function ManageEntitiesModal({
               className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 transition shadow disabled:opacity-50 flex items-center justify-center space-x-1.5 shrink-0"
             >
               <Sparkles className="h-3.5 w-3.5" />
-              <span>{isSeeding ? 'Inicializando...' : '⚡ Inicializar Padrões'}</span>
+              <span>{isSeeding ? 'Inicializando...' : '⚡ Restaurar Padrões'}</span>
             </button>
           </div>
 
           {activeTab === 'categories' ? (
-            <div>
+            <div className="space-y-4">
               {/* Formulário Nova Categoria */}
-              <form onSubmit={handleCreateCategory} className="p-4 rounded-xl bg-slate-950/70 border border-slate-800/90 space-y-3">
+              <form onSubmit={handleCreateCategory} className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3">
                 <div className="flex items-center space-x-2 text-xs font-bold text-white uppercase tracking-wider">
                   <Plus className="h-4 w-4 text-cyan-400" />
                   <span>Cadastrar Nova Categoria</span>
@@ -253,7 +347,7 @@ export function ManageEntitiesModal({
                     <input
                       type="text"
                       required
-                      placeholder="Ex: Pets & Veterinário, Consultoria PJ..."
+                      placeholder="Ex: Roupas & Vestuário, Combustível, Streaming..."
                       value={newCatName}
                       onChange={(e) => setNewCatName(e.target.value)}
                       className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-500"
@@ -269,8 +363,8 @@ export function ManageEntitiesModal({
                       onChange={(e) => setNewCatNature(e.target.value as NatureType)}
                       className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-cyan-500"
                     >
+                      <option value="VARIABLE_COST">Custo Variável (Recomendado)</option>
                       <option value="FIXED_COST">Custo Fixo</option>
-                      <option value="VARIABLE_COST">Custo Variável</option>
                       <option value="INCOME">Receita</option>
                       <option value="INVESTMENT">Investimento</option>
                     </select>
@@ -281,7 +375,7 @@ export function ManageEntitiesModal({
                   <button
                     type="submit"
                     disabled={isSubmittingCat}
-                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 transition shadow disabled:opacity-50 flex items-center space-x-1.5"
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-950 bg-gradient-to-r from-amber-400 via-teal-300 to-emerald-400 hover:from-amber-300 hover:to-emerald-300 transition shadow disabled:opacity-50 flex items-center space-x-1.5"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     <span>{isSubmittingCat ? 'Salvando...' : 'Adicionar Categoria'}</span>
@@ -289,27 +383,187 @@ export function ManageEntitiesModal({
                 </div>
               </form>
 
-              {/* Lista de Categorias Existentes */}
-              <div className="mt-4">
-                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                  Categorias Ativas ({categories.length})
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {categories.map((cat) => {
-                    const badge = natureLabels[cat.natureType] || { label: cat.natureType, bg: 'bg-slate-800', text: 'text-slate-300' };
+              {/* Filtros de Natureza */}
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                    Categorias Cadastradas ({filteredCategories.length})
+                  </h4>
+                  <span className="text-[11px] text-slate-400">
+                    Clique na lixeira para excluir as que não estiver usando
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCategoryFilter('ALL');
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                      categoryFilter === 'ALL'
+                        ? 'bg-slate-700 text-white border border-slate-600'
+                        : 'bg-slate-950/60 text-slate-400 hover:text-white border border-slate-800'
+                    }`}
+                  >
+                    Todos ({categories.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCategoryFilter('VARIABLE_COST');
+                      setNewCatNature('VARIABLE_COST');
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 ${
+                      categoryFilter === 'VARIABLE_COST'
+                        ? 'bg-amber-950/80 text-amber-300 border border-amber-500/50 shadow-sm'
+                        : 'bg-slate-950/60 text-amber-400/70 hover:text-amber-300 border border-slate-800'
+                    }`}
+                  >
+                    <span>⚡ Custos Variáveis ({variableCostCount})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCategoryFilter('FIXED_COST');
+                      setNewCatNature('FIXED_COST');
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                      categoryFilter === 'FIXED_COST'
+                        ? 'bg-rose-950/80 text-rose-300 border border-rose-500/50'
+                        : 'bg-slate-950/60 text-rose-400/70 hover:text-rose-300 border border-slate-800'
+                    }`}
+                  >
+                    Custos Fixos ({fixedCostCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCategoryFilter('INCOME');
+                      setNewCatNature('INCOME');
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                      categoryFilter === 'INCOME'
+                        ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/50'
+                        : 'bg-slate-950/60 text-emerald-400/70 hover:text-emerald-300 border border-slate-800'
+                    }`}
+                  >
+                    Receitas ({incomeCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCategoryFilter('INVESTMENT');
+                      setNewCatNature('INVESTMENT');
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                      categoryFilter === 'INVESTMENT'
+                        ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-500/50'
+                        : 'bg-slate-950/60 text-cyan-400/70 hover:text-cyan-300 border border-slate-800'
+                    }`}
+                  >
+                    Investimentos ({investmentCount})
+                  </button>
+                </div>
+
+                {/* Grid de Categorias */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                  {filteredCategories.map((cat) => {
+                    const badge = natureLabels[cat.natureType] || {
+                      label: cat.natureType,
+                      bg: 'bg-slate-800',
+                      text: 'text-slate-300',
+                      border: 'border-slate-700',
+                    };
+                    const txCount = cat._count?.transactions ?? 0;
+                    const isEditing = editingCatId === cat.id;
+
+                    if (isEditing) {
+                      return (
+                        <div
+                          key={cat.id}
+                          className="p-3 rounded-xl bg-slate-950 border border-cyan-500/60 space-y-2"
+                        >
+                          <input
+                            type="text"
+                            value={editCatName}
+                            onChange={(e) => setEditCatName(e.target.value)}
+                            className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-cyan-500"
+                          />
+                          <div className="flex items-center justify-between gap-2">
+                            <select
+                              value={editCatNature}
+                              onChange={(e) => setEditCatNature(e.target.value as NatureType)}
+                              className="px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 text-white text-[11px]"
+                            >
+                              <option value="VARIABLE_COST">Custo Variável</option>
+                              <option value="FIXED_COST">Custo Fixo</option>
+                              <option value="INCOME">Receita</option>
+                              <option value="INVESTMENT">Investimento</option>
+                            </select>
+                            <div className="flex items-center space-x-1">
+                              <button
+                                type="button"
+                                onClick={() => setEditingCatId(null)}
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleSaveEditCat(cat.id)}
+                                disabled={isUpdatingCat}
+                                className="p-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold hover:bg-emerald-400"
+                              >
+                                <Check className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+
                     return (
                       <div
                         key={cat.id}
-                        className="p-2.5 rounded-xl bg-slate-950/40 border border-slate-800/80 flex items-center justify-between gap-2"
+                        className="p-2.5 sm:p-3 rounded-xl bg-slate-950/50 border border-slate-800/90 hover:border-slate-700 transition flex items-center justify-between gap-2 group"
                       >
-                        <span className="text-xs font-medium text-slate-200 truncate">
-                          {cat.name}
-                        </span>
-                        <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-md border shrink-0 ${badge.bg} ${badge.text}`}
-                        >
-                          {badge.label}
-                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-semibold text-slate-200 truncate">
+                            {cat.name}
+                          </p>
+                          <div className="flex items-center space-x-2 mt-0.5">
+                            <span
+                              className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${badge.bg} ${badge.text} ${badge.border}`}
+                            >
+                              {badge.label}
+                            </span>
+                            <span className="text-[10px] text-slate-500">
+                              {txCount === 0 ? 'Sem lançamentos' : `${txCount} lançamento(s)`}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Botões de Ação */}
+                        <div className="flex items-center space-x-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleStartEditCat(cat)}
+                            title="Editar Categoria"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-slate-900 transition"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCategory(cat)}
+                            disabled={deletingCatId === cat.id}
+                            title={txCount === 0 ? "Excluir categoria não utilizada" : `Excluir categoria (${txCount} lançamentos)`}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-950/30 transition disabled:opacity-50"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
@@ -317,9 +571,9 @@ export function ManageEntitiesModal({
               </div>
             </div>
           ) : (
-            <div>
+            <div className="space-y-4">
               {/* Formulário Nova Conta */}
-              <form onSubmit={handleCreateAccount} className="p-4 rounded-xl bg-slate-950/70 border border-slate-800/90 space-y-3">
+              <form onSubmit={handleCreateAccount} className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3">
                 <div className="flex items-center space-x-2 text-xs font-bold text-white uppercase tracking-wider">
                   <Plus className="h-4 w-4 text-cyan-400" />
                   <span>Cadastrar Nova Conta Financeira</span>
@@ -389,10 +643,11 @@ export function ManageEntitiesModal({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {accounts.map((acc) => {
                     const typeInfo = accountTypeLabels[acc.type] || { label: acc.type, icon: <Building className="h-4 w-4" /> };
+                    const txCount = acc._count?.transactions ?? 0;
                     return (
                       <div
                         key={acc.id}
-                        className="p-3 rounded-xl bg-slate-950/40 border border-slate-800/80 flex items-center justify-between gap-2"
+                        className="p-3 rounded-xl bg-slate-950/50 border border-slate-800/90 flex items-center justify-between gap-2 group hover:border-slate-700 transition"
                       >
                         <div className="flex items-center space-x-2.5 min-w-0">
                           <div className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 shrink-0">
@@ -403,13 +658,24 @@ export function ManageEntitiesModal({
                               {acc.name}
                             </p>
                             <p className="text-[10px] text-slate-400 truncate">
-                              {typeInfo.label}
+                              {typeInfo.label} • {txCount} lançamento(s)
                             </p>
                           </div>
                         </div>
-                        <span className="text-xs font-bold font-mono-numbers text-cyan-400 shrink-0">
-                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(acc.balance)}
-                        </span>
+                        <div className="flex items-center space-x-2 shrink-0">
+                          <span className="text-xs font-bold font-mono-numbers text-cyan-400">
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(acc.balance)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteAccount(acc)}
+                            disabled={deletingAccId === acc.id}
+                            title="Excluir conta"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-950/30 transition disabled:opacity-50"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
