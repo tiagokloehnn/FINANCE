@@ -7,9 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId') || undefined;
-
+    const userId = request.headers.get('x-user-id') || undefined;
     const accounts = await getAccounts(userId);
     return NextResponse.json(accounts);
   } catch (error: any) {
@@ -23,6 +21,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const userId = request.headers.get('x-user-id') || undefined;
     const body = await request.json();
 
     if (!body.name || !body.type) {
@@ -36,7 +35,7 @@ export async function POST(request: NextRequest) {
       name: body.name,
       type: body.type as AccountType,
       balance: body.balance !== undefined ? Number(body.balance) : 0,
-      userId: body.userId,
+      userId: userId || body.userId,
     });
 
     return NextResponse.json(account, { status: 201 });

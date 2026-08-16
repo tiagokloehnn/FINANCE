@@ -28,6 +28,49 @@ export const DEFAULT_CATEGORIES = [
   { name: 'Aportes Internacionais / Cripto', natureType: NatureType.INVESTMENT },
 ];
 
+export async function seedUserDatabase(userId: string) {
+  // 1. Cria contas padrão se não existirem para este usuário
+  const existingAccounts = await prisma.account.findMany({ where: { userId } });
+  if (existingAccounts.length === 0) {
+    await prisma.account.createMany({
+      data: [
+        {
+          userId,
+          name: 'Conta Corrente Principal',
+          type: AccountType.CHECKING,
+          balance: 0.0,
+        },
+        {
+          userId,
+          name: 'Reserva de Emergência (Liquidez Diária)',
+          type: AccountType.SAVINGS,
+          balance: 0.0,
+        },
+        {
+          userId,
+          name: 'Corretora de Investimentos',
+          type: AccountType.INVESTMENT,
+          balance: 0.0,
+        },
+      ],
+    });
+  }
+
+  // 2. Cria categorias contábeis padrão se não existirem para este usuário
+  const existingCategories = await prisma.category.findMany({ where: { userId } });
+  if (existingCategories.length === 0) {
+    await prisma.category.createMany({
+      data: DEFAULT_CATEGORIES.map((cat) => ({
+        userId,
+        name: cat.name,
+        natureType: cat.natureType,
+      })),
+    });
+  }
+
+  return { success: true };
+}
+
 export async function seedDatabase(reset: boolean = false) {
   if (reset) {
     await prisma.transaction.deleteMany();
@@ -47,44 +90,8 @@ export async function seedDatabase(reset: boolean = false) {
     });
   }
 
-  // 2. Cria contas padrão se não existirem
-  const existingAccounts = await prisma.account.findMany({ where: { userId: user.id } });
-  if (existingAccounts.length === 0) {
-    await prisma.account.createMany({
-      data: [
-        {
-          userId: user.id,
-          name: 'Conta Corrente Principal',
-          type: AccountType.CHECKING,
-          balance: 0.0,
-        },
-        {
-          userId: user.id,
-          name: 'Reserva de Emergência (Liquidez Diária)',
-          type: AccountType.SAVINGS,
-          balance: 0.0,
-        },
-        {
-          userId: user.id,
-          name: 'Corretora de Investimentos',
-          type: AccountType.INVESTMENT,
-          balance: 0.0,
-        },
-      ],
-    });
-  }
-
-  // 3. Cria categorias contábeis padrão se não existirem
-  const existingCategories = await prisma.category.findMany({ where: { userId: user.id } });
-  if (existingCategories.length === 0) {
-    await prisma.category.createMany({
-      data: DEFAULT_CATEGORIES.map((cat) => ({
-        userId: user.id,
-        name: cat.name,
-        natureType: cat.natureType,
-      })),
-    });
-  }
+  // 2. Popula contas e categorias para este usuário
+  await seedUserDatabase(user.id);
 
   return {
     success: true,

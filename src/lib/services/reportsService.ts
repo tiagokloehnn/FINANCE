@@ -1,10 +1,14 @@
 import { prisma } from '../prisma';
 import { NatureType, AccountType } from '@prisma/client';
 import { DreReport, ExecutiveOverview, CategoryBreakdown } from '../../types/finance';
-import { seedDatabase } from './seedService';
+import { seedUserDatabase } from './seedService';
 
-export async function getDre(startDate?: string, endDate?: string): Promise<DreReport> {
+export async function getDre(startDate?: string, endDate?: string, userId?: string): Promise<DreReport> {
   const where: any = {};
+
+  if (userId) {
+    where.account = { userId };
+  }
 
   if (startDate || endDate) {
     where.date = {};
@@ -120,14 +124,17 @@ export async function getDre(startDate?: string, endDate?: string): Promise<DreR
   };
 }
 
-export async function getExecutiveOverview(): Promise<ExecutiveOverview> {
-  // Se não houver contas nem categorias, inicializa automaticamente para garantir que o dashboard nunca quebre
-  const accountsCount = await prisma.account.count();
-  if (accountsCount === 0) {
-    await seedDatabase(false);
+export async function getExecutiveOverview(userId?: string): Promise<ExecutiveOverview> {
+  if (userId) {
+    const accountsCount = await prisma.account.count({ where: { userId } });
+    if (accountsCount === 0) {
+      await seedUserDatabase(userId);
+    }
   }
 
+  const where = userId ? { userId } : {};
   const accounts = await prisma.account.findMany({
+    where,
     orderBy: { balance: 'desc' },
   });
 
@@ -148,7 +155,7 @@ export async function getExecutiveOverview(): Promise<ExecutiveOverview> {
   const totalLiquidCash = totalFreeCash + totalEmergencyFund;
   const totalNetWorth = totalLiquidCash + totalInvested;
 
-  const dre = await getDre();
+  const dre = await getDre(undefined, undefined, userId);
 
   const monthlyBurnRate = dre.totalFixedCosts + dre.totalVariableCosts;
   const runwayMonths =
@@ -176,14 +183,14 @@ export async function getExecutiveOverview(): Promise<ExecutiveOverview> {
     },
     metrics: {
       operatingSavingsMargin: dre.margins.operatingSavingsMargin,
+      savingsRate: dre.margins.operatingSavingsMargin,
       monthlyBurnRate: Number(monthlyBurnRate.toFixed(2)),
       runwayMonths,
       runwayStatus,
-      savingsRate: dre.margins.investmentRate,
     },
     dreSummary: {
       totalIncome: dre.totalIncome,
-      totalOperatingCosts: Number(monthlyBurnRate.toFixed(2)),
+      totalOperatingCosts: dre.totalFixedCosts + dre.totalVariableCosts,
       operatingCashFlow: dre.operatingCashFlow,
       totalInvestments: dre.totalInvestments,
       netCashFlow: dre.netCashFlow,
@@ -192,8 +199,8 @@ export async function getExecutiveOverview(): Promise<ExecutiveOverview> {
       id: a.id,
       userId: a.userId,
       name: a.name,
-      type: a.type as AccountType,
-      balance: Number(a.balance.toFixed(2)),
+      type: a.type,
+      balance: a.balance,
     })),
   };
 }

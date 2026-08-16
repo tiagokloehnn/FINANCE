@@ -1,12 +1,13 @@
 import { prisma } from '../prisma';
 import { NatureType } from '@prisma/client';
-import { seedDatabase } from './seedService';
+import { seedUserDatabase } from './seedService';
 
 export async function getCategories(userId?: string) {
-  // Se não houver categorias no banco, roda auto-seed para garantir prontidão
-  const count = await prisma.category.count();
-  if (count === 0) {
-    await seedDatabase(false);
+  if (userId) {
+    const userCatCount = await prisma.category.count({ where: { userId } });
+    if (userCatCount === 0) {
+      await seedUserDatabase(userId);
+    }
   }
 
   const where = userId ? { userId } : {};
@@ -22,20 +23,21 @@ export async function getCategories(userId?: string) {
 }
 
 export async function createCategory(data: { name: string; natureType: NatureType; userId?: string }) {
-  let user = data.userId ? await prisma.user.findUnique({ where: { id: data.userId } }) : null;
-  if (!user) {
-    user = await prisma.user.findFirst();
-    if (!user) {
-      const seedRes = await seedDatabase(false);
-      user = seedRes.user;
-    }
+  let userId = data.userId;
+  if (!userId) {
+    const user = await prisma.user.findFirst();
+    if (user) userId = user.id;
+  }
+
+  if (!userId) {
+    throw new Error('Usuário não identificado.');
   }
 
   return prisma.category.create({
     data: {
-      name: data.name,
+      name: data.name.trim(),
       natureType: data.natureType,
-      userId: user!.id,
+      userId,
     },
     include: {
       _count: {
@@ -47,10 +49,15 @@ export async function createCategory(data: { name: string; natureType: NatureTyp
 
 export async function updateCategory(
   id: string,
-  data: { name?: string; natureType?: NatureType }
+  data: { name?: string; natureType?: NatureType; userId?: string }
 ) {
+  const where: any = { id };
+  if (data.userId) {
+    where.userId = data.userId;
+  }
+
   return prisma.category.update({
-    where: { id },
+    where,
     data: {
       ...(data.name && { name: data.name.trim() }),
       ...(data.natureType && { natureType: data.natureType }),
@@ -63,8 +70,13 @@ export async function updateCategory(
   });
 }
 
-export async function deleteCategory(id: string) {
+export async function deleteCategory(id: string, userId?: string) {
+  const where: any = { id };
+  if (userId) {
+    where.userId = userId;
+  }
+
   return prisma.category.delete({
-    where: { id },
+    where,
   });
 }

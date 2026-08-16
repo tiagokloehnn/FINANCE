@@ -1,12 +1,13 @@
 import { prisma } from '../prisma';
 import { AccountType } from '@prisma/client';
-import { seedDatabase } from './seedService';
+import { seedUserDatabase } from './seedService';
 
 export async function getAccounts(userId?: string) {
-  // Auto-seed se não houver contas
-  const count = await prisma.account.count();
-  if (count === 0) {
-    await seedDatabase(false);
+  if (userId) {
+    const userAccCount = await prisma.account.count({ where: { userId } });
+    if (userAccCount === 0) {
+      await seedUserDatabase(userId);
+    }
   }
 
   const where = userId ? { userId } : {};
@@ -27,21 +28,22 @@ export async function createAccount(data: {
   balance?: number;
   userId?: string;
 }) {
-  let user = data.userId ? await prisma.user.findUnique({ where: { id: data.userId } }) : null;
-  if (!user) {
-    user = await prisma.user.findFirst();
-    if (!user) {
-      const seedRes = await seedDatabase(false);
-      user = seedRes.user;
-    }
+  let userId = data.userId;
+  if (!userId) {
+    const user = await prisma.user.findFirst();
+    if (user) userId = user.id;
+  }
+
+  if (!userId) {
+    throw new Error('Usuário não identificado.');
   }
 
   return prisma.account.create({
     data: {
-      name: data.name,
+      name: data.name.trim(),
       type: data.type,
       balance: data.balance ?? 0,
-      userId: user!.id,
+      userId,
     },
     include: {
       _count: {
@@ -53,10 +55,15 @@ export async function createAccount(data: {
 
 export async function updateAccount(
   id: string,
-  data: { name?: string; type?: AccountType; balance?: number }
+  data: { name?: string; type?: AccountType; balance?: number; userId?: string }
 ) {
+  const where: any = { id };
+  if (data.userId) {
+    where.userId = data.userId;
+  }
+
   return prisma.account.update({
-    where: { id },
+    where,
     data: {
       ...(data.name && { name: data.name.trim() }),
       ...(data.type && { type: data.type }),
@@ -70,8 +77,13 @@ export async function updateAccount(
   });
 }
 
-export async function deleteAccount(id: string) {
+export async function deleteAccount(id: string, userId?: string) {
+  const where: any = { id };
+  if (userId) {
+    where.userId = userId;
+  }
+
   return prisma.account.delete({
-    where: { id },
+    where,
   });
 }

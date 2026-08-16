@@ -1,4 +1,4 @@
-export function formatDatabaseError(error: any): string {
+export function formatDatabaseError(error: any, fallback?: string): string {
   const msg = error?.message || String(error || '');
   const code = error?.code || '';
 
@@ -21,8 +21,8 @@ export function formatDatabaseError(error: any): string {
   if (
     code === 'P2021' ||
     msg.includes('does not exist') ||
-    msg.includes('relation') && msg.includes('does not exist') ||
-    msg.includes('Table') && msg.includes('does not exist')
+    (msg.includes('relation') && msg.includes('does not exist')) ||
+    (msg.includes('Table') && msg.includes('does not exist'))
   ) {
     return 'Tabelas não criadas no Supabase: As tabelas do banco ainda não foram criadas. Abra o SQL Editor no painel do Supabase, cole o conteúdo de "supabase-schema.sql" e clique em "Run" (ou rode "npx prisma db push").';
   }
@@ -46,7 +46,11 @@ export function formatDatabaseError(error: any): string {
     return 'Banco de Dados não configurado: A variável DATABASE_URL não foi definida na Vercel (ou no arquivo .env local). Após adicionar as variáveis na Vercel, vá em "Deployments" -> (...) -> "Redeploy" para aplicar.';
   }
 
-  return msg || 'Erro ao processar requisição no banco de dados.';
+  return msg || fallback || 'Erro ao processar requisição no banco de dados.';
 }
 
-
+export function formatError(error: any, fallback?: string): { message: string } {
+  return {
+    message: formatDatabaseError(error, fallback),
+  };
+}

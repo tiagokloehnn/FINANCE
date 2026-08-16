@@ -7,9 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId') || undefined;
-
+    const userId = request.headers.get('x-user-id') || undefined;
     const categories = await getCategories(userId);
     return NextResponse.json(categories);
   } catch (error: any) {
@@ -23,6 +21,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const userId = request.headers.get('x-user-id') || undefined;
     const body = await request.json();
 
     if (!body.name || !body.natureType) {
@@ -35,7 +34,7 @@ export async function POST(request: NextRequest) {
     const category = await createCategory({
       name: body.name,
       natureType: body.natureType as NatureType,
-      userId: body.userId,
+      userId: userId || body.userId,
     });
 
     return NextResponse.json(category, { status: 201 });

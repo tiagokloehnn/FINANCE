@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    const userId = request.headers.get('x-user-id') || undefined;
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get('startDate') || undefined;
     const endDate = searchParams.get('endDate') || undefined;
@@ -21,6 +22,7 @@ export async function GET(request: NextRequest) {
       natureType,
       accountId,
       isRealized,
+      userId,
     });
 
     return NextResponse.json(transactions);
@@ -35,6 +37,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const userId = request.headers.get('x-user-id') || undefined;
     const body = await request.json();
 
     if (!body.accountId || !body.categoryId || body.amount === undefined || !body.description) {
@@ -51,6 +54,7 @@ export async function POST(request: NextRequest) {
       description: body.description,
       date: body.date,
       isRealized: body.isRealized,
+      userId,
     });
 
     return NextResponse.json(transaction, { status: 201 });

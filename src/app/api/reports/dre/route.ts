@@ -6,11 +6,12 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    const userId = request.headers.get('x-user-id') || undefined;
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get('startDate') || undefined;
     const endDate = searchParams.get('endDate') || undefined;
 
-    const dre = await getDre(startDate, endDate);
+    const dre = await getDre(startDate, endDate, userId);
     return NextResponse.json(dre);
   } catch (error: any) {
     console.error('Erro ao gerar relatório DRE:', error);

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { Header } from '../components/Header';
 import { MetricCard } from '../components/MetricCard';
 import { DreTable } from '../components/DreTable';
@@ -28,6 +29,8 @@ import {
 } from 'lucide-react';
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const [currentUser, setCurrentUser] = useState<{ id: string; name: string; email: string } | null>(null);
   const [overview, setOverview] = useState<ExecutiveOverview | null>(null);
   const [dre, setDre] = useState<DreReport | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -39,17 +42,27 @@ export default function DashboardPage() {
   const [isSeeding, setIsSeeding] = useState<boolean>(false);
   const [seedSuccessMessage, setSeedSuccessMessage] = useState<string | null>(null);
 
+  const handleLogout = async () => {
+    try {
+      await api.logout();
+      router.push('/login');
+      router.refresh();
+    } catch (err) {
+      console.error('Erro ao fazer logout:', err);
+    }
+  };
 
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const [overviewData, dreData, txsData, accountsData, catsData] =
+      const [overviewData, dreData, txsData, accountsData, catsData, meData] =
         await Promise.all([
           api.getOverview(),
           api.getDre(),
           api.getTransactions(),
           api.getAccounts(),
           api.getCategories(),
+          api.getMe().catch(() => null),
         ]);
 
       setOverview(overviewData);
@@ -57,6 +70,9 @@ export default function DashboardPage() {
       setTransactions(txsData);
       setAccounts(accountsData);
       setCategories(catsData);
+      if (meData?.user) {
+        setCurrentUser(meData.user);
+      }
     } catch (error) {
       console.error('Erro ao carregar dados financeiros:', error);
     } finally {
@@ -68,6 +84,21 @@ export default function DashboardPage() {
     loadData();
   }, [loadData]);
 
+  const handleTriggerSeed = async () => {
+    try {
+      setIsSeeding(true);
+      setSeedSuccessMessage(null);
+      await api.triggerSeed(false);
+      await loadData();
+      setSeedSuccessMessage('Plano de contas e categorias padrão do Supabase criado e carregado com sucesso!');
+      setTimeout(() => setSeedSuccessMessage(null), 5000);
+    } catch (err: any) {
+      console.error('Erro ao rodar seed manual:', err);
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
   const handleAddTransaction = async (payload: CreateTransactionPayload) => {
     await api.createTransaction(payload);
     await loadData();
@@ -78,20 +109,6 @@ export default function DashboardPage() {
     await loadData();
   };
 
-  const handleTriggerSeed = async () => {
-    try {
-      setIsSeeding(true);
-      await api.triggerSeed(false);
-      setSeedSuccessMessage('Plano de contas e categorias contábeis criados com sucesso!');
-      await loadData();
-      setTimeout(() => setSeedSuccessMessage(null), 5000);
-    } catch (err: any) {
-      alert('Erro ao inicializar banco de dados: ' + (err?.message || 'Verifique as variáveis de ambiente'));
-    } finally {
-      setIsSeeding(false);
-    }
-  };
-
   const formatBRL = (val: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -99,24 +116,34 @@ export default function DashboardPage() {
     }).format(val);
   };
 
-  const currentNetWorth = overview?.liquidity.totalNetWorth ?? 0;
-  const totalFreeCash = overview?.liquidity.totalFreeCash ?? 0;
-  const totalEmergencyFund = overview?.liquidity.totalEmergencyFund ?? 0;
-  const totalLiquid = totalFreeCash + totalEmergencyFund;
+  const totalLiquid = overview?.liquidity.totalFreeCash
+    ? overview.liquidity.totalFreeCash + (overview.liquidity.totalEmergencyFund || 0)
+    : 0;
 
-  const operatingSavingsMargin = overview?.metrics.operatingSavingsMargin ?? 0;
-  const runwayMonths = overview?.metrics.runwayMonths ?? 0;
-  const monthlyBurnRate = overview?.metrics.monthlyBurnRate ?? 0;
+  const totalFreeCash = overview?.liquidity.totalFreeCash || 0;
+  const totalEmergencyFund = overview?.liquidity.totalEmergencyFund || 0;
+  const currentNetWorth = overview?.liquidity.totalNetWorth || 0;
+
+  const operatingSavingsMargin =
+    overview?.metrics.operatingSavingsMargin !== undefined
+      ? overview.metrics.operatingSavingsMargin
+      : dre?.margins.operatingSavingsMargin || 0;
+
+  const runwayMonths = overview?.metrics.runwayMonths || 0;
+  const monthlyBurnRate = overview?.metrics.monthlyBurnRate || 0;
 
   const getRunwayBadgeInfo = () => {
     if (runwayMonths >= 12) {
-      return { text: 'Excelente (>= 12m)', variant: 'emerald' as const };
+      return { text: 'Confortável (>12m)', variant: 'emerald' as const };
     }
     if (runwayMonths >= 6) {
-      return { text: 'Saudável (>= 6m)', variant: 'cyan' as const };
+      return { text: 'Estável (>6m)', variant: 'cyan' as const };
     }
     if (runwayMonths >= 3) {
-      return { text: 'Alerta (>= 3m)', variant: 'amber' as const };
+      return { text: 'Alerta Moderado (3-6m)', variant: 'amber' as const };
+    }
+    if (runwayMonths > 0) {
+      return { text: 'Crítico (<3m)', variant: 'rose' as const };
     }
     return { text: 'Início / Sem Gastos', variant: 'cyan' as const };
   };
@@ -134,9 +161,11 @@ export default function DashboardPage() {
       {/* Executive Header */}
       <Header
         netWorth={currentNetWorth}
+        userName={currentUser?.name}
         onOpenQuickEntry={() => setIsQuickEntryOpen(true)}
         onOpenManageEntities={() => setIsManageEntitiesOpen(true)}
         onRefresh={loadData}
+        onLogout={handleLogout}
         isLoading={isLoading}
         isUninitialized={isUninitialized}
         onTriggerSeed={handleTriggerSeed}

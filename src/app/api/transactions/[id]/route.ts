@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { deleteTransaction } from '@/lib/services/transactionsService';
+import { formatDatabaseError } from '@/lib/formatError';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,18 +9,14 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const id = params.id;
-    if (!id) {
-      return NextResponse.json({ message: 'ID da transação não fornecido' }, { status: 400 });
-    }
-
-    const deleted = await deleteTransaction(id);
-    return NextResponse.json({ success: true, deleted });
+    const userId = request.headers.get('x-user-id') || undefined;
+    await deleteTransaction(params.id, userId);
+    return NextResponse.json({ success: true, message: 'Transação excluída com sucesso.' });
   } catch (error: any) {
     console.error('Erro ao excluir transação:', error);
     return NextResponse.json(
-      { message: error?.message || 'Erro ao excluir transação' },
-      { status: 400 }
+      { message: formatDatabaseError(error, 'Erro ao excluir transação.') },
+      { status: 500 }
     );
   }
 }

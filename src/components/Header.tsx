@@ -7,13 +7,17 @@ import {
   RefreshCw,
   FolderTree,
   Sparkles,
+  LogOut,
+  User,
 } from 'lucide-react';
 
 interface HeaderProps {
   netWorth: number;
+  userName?: string;
   onOpenQuickEntry: () => void;
   onOpenManageEntities?: () => void;
   onRefresh: () => void;
+  onLogout?: () => void;
   isLoading: boolean;
   isUninitialized?: boolean;
   onTriggerSeed?: () => void;
@@ -22,9 +26,11 @@ interface HeaderProps {
 
 export function Header({
   netWorth,
+  userName,
   onOpenQuickEntry,
   onOpenManageEntities,
   onRefresh,
+  onLogout,
   isLoading,
   isUninitialized,
   onTriggerSeed,
@@ -49,9 +55,16 @@ export function Header({
                 <h1 className="text-base sm:text-lg font-bold tracking-tight text-white whitespace-nowrap">
                   Finance<span className="text-emerald-400 font-semibold">CFO</span>
                 </h1>
-                <span className="hidden sm:inline-flex px-2 py-0.5 text-[10px] font-semibold text-slate-300 bg-slate-800 border border-slate-700 rounded-md">
-                  Vercel + Supabase
-                </span>
+                {userName ? (
+                  <span className="hidden md:inline-flex items-center space-x-1 px-2 py-0.5 text-[10px] font-medium text-slate-300 bg-slate-800/80 border border-slate-700/80 rounded-md truncate max-w-[160px]">
+                    <User className="h-3 w-3 text-slate-400 shrink-0" />
+                    <span className="truncate">{userName}</span>
+                  </span>
+                ) : (
+                  <span className="hidden sm:inline-flex px-2 py-0.5 text-[10px] font-semibold text-slate-300 bg-slate-800 border border-slate-700 rounded-md">
+                    Protegido
+                  </span>
+                )}
               </div>
               <p className="text-[10px] sm:text-xs text-slate-400 truncate hidden xs:block">
                 Governança, DRE e Liquidez Pessoal
@@ -95,20 +108,6 @@ export function Header({
               />
             </button>
 
-            {/* Quick Seed Action in Header if uninitialized */}
-            {isUninitialized && onTriggerSeed && (
-              <button
-                onClick={onTriggerSeed}
-                disabled={isSeeding}
-                className="flex items-center space-x-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl font-bold text-xs text-slate-950 bg-amber-400 hover:bg-amber-300 transition shadow-sm active:scale-95 shrink-0"
-                title="Criar contas e categorias padrão no Supabase"
-              >
-                <Sparkles className="h-4 w-4 text-slate-950 shrink-0" />
-                <span className="hidden sm:inline">{isSeeding ? 'Inicializando...' : '⚡ Inicializar Supabase'}</span>
-                <span className="sm:hidden font-bold">⚡ Inicializar</span>
-              </button>
-            )}
-
             {/* Fast Entry Button */}
             <button
               onClick={onOpenQuickEntry}
@@ -118,10 +117,20 @@ export function Header({
               <span className="hidden sm:inline">Novo Lançamento</span>
               <span className="sm:hidden font-bold">Novo</span>
             </button>
+
+            {/* Logout Button */}
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="p-2 sm:p-2.5 rounded-xl bg-slate-900 border border-slate-700/80 text-slate-400 hover:text-rose-400 hover:border-rose-500/40 hover:bg-rose-950/20 transition active:scale-95 shrink-0"
+                title="Sair / Encerrar sessão"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
       </div>
     </header>
   );
 }
-

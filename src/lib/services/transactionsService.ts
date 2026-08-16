@@ -1,6 +1,6 @@
 import { prisma } from '../prisma';
 import { NatureType } from '@prisma/client';
-import { seedDatabase } from './seedService';
+import { seedUserDatabase } from './seedService';
 
 export interface CreateTransactionDto {
   accountId: string;
@@ -9,45 +9,50 @@ export interface CreateTransactionDto {
   description: string;
   date?: string;
   isRealized?: boolean;
+  userId?: string;
 }
 
 export async function createTransaction(dto: CreateTransactionDto) {
-  // Se não houver categorias ou contas, auto-seed para garantir prontidão
-  const catCount = await prisma.category.count().catch(() => 0);
-  const accCount = await prisma.account.count().catch(() => 0);
-  if (catCount === 0 || accCount === 0) {
-    await seedDatabase(false);
+  let categoryWhere: any = { id: dto.categoryId };
+  let accountWhere: any = { id: dto.accountId };
+
+  if (dto.userId) {
+    categoryWhere = { id: dto.categoryId, userId: dto.userId };
+    accountWhere = { id: dto.accountId, userId: dto.userId };
   }
 
-  let category = await prisma.category.findUnique({
-    where: { id: dto.categoryId },
+  let category = await prisma.category.findFirst({
+    where: categoryWhere,
   });
 
-  // Se o frontend passou um mock ID (ex: c1..c11) ou ID não encontrado, tenta achar pelo nome ou pegar a primeira categoria
-  if (!category) {
+  // Se o frontend passou um mock ID (ex: c1..c11) ou ID não encontrado, tenta achar pelo nome
+  if (!category && dto.userId) {
     category = await prisma.category.findFirst({
-      where: { name: { equals: dto.categoryId, mode: 'insensitive' } },
+      where: {
+        userId: dto.userId,
+        name: { equals: dto.categoryId, mode: 'insensitive' },
+      },
     });
   }
-  if (!category) {
-    category = await prisma.category.findFirst();
+
+  if (!category && dto.userId) {
+    category = await prisma.category.findFirst({ where: { userId: dto.userId } });
   }
 
   if (!category) {
-    throw new Error(`Categoria não encontrada no banco de dados. Clique em "⚡ Inicializar Categorias Padrão".`);
+    throw new Error(`Categoria não encontrada.`);
   }
 
-  let account = await prisma.account.findUnique({
-    where: { id: dto.accountId },
+  let account = await prisma.account.findFirst({
+    where: accountWhere,
   });
 
-  // Se o ID da conta for mock (ex: acc-1..acc-3) ou não encontrado, pega a primeira conta
-  if (!account) {
-    account = await prisma.account.findFirst();
+  if (!account && dto.userId) {
+    account = await prisma.account.findFirst({ where: { userId: dto.userId } });
   }
 
   if (!account) {
-    throw new Error(`Conta financeira não encontrada no banco de dados. Clique em "⚡ Inicializar Categorias Padrão".`);
+    throw new Error(`Conta financeira não encontrada.`);
   }
 
   const isRealized = dto.isRealized ?? true;
@@ -58,7 +63,7 @@ export async function createTransaction(dto: CreateTransactionDto) {
       accountId: account.id,
       categoryId: category.id,
       amount: dto.amount,
-      description: dto.description,
+      description: dto.description.trim(),
       date,
       isRealized,
     },
@@ -94,8 +99,13 @@ export async function getTransactions(filters?: {
   natureType?: NatureType;
   accountId?: string;
   isRealized?: boolean;
+  userId?: string;
 }) {
   const where: any = {};
+
+  if (filters?.userId) {
+    where.account = { userId: filters.userId };
+  }
 
   if (filters?.startDate || filters?.endDate) {
     where.date = {};
@@ -105,6 +115,7 @@ export async function getTransactions(filters?: {
 
   if (filters?.natureType) {
     where.category = {
+      ...(where.category || {}),
       natureType: filters.natureType,
     };
   }
@@ -129,25 +140,30 @@ export async function getTransactions(filters?: {
   });
 }
 
-export async function deleteTransaction(id: string) {
-  const transaction = await prisma.transaction.findUnique({
+export async function deleteTransaction(id: string, userId?: string) {
+  const tx = await prisma.transaction.findUnique({
     where: { id },
-    include: { category: true },
+    include: { account: true, category: true },
   });
 
-  if (!transaction) {
-    throw new Error(`Transação com ID ${id} não encontrada`);
+  if (!tx) {
+    throw new Error('Transação não encontrada');
   }
 
-  // Reverte o saldo se estava realizada
-  if (transaction.isRealized) {
+  // Verifica se a transação pertence ao usuário autenticado
+  if (userId && tx.account.userId !== userId) {
+    throw new Error('Não autorizado a excluir esta transação.');
+  }
+
+  // Reverte o saldo se realizada
+  if (tx.isRealized) {
     const balanceDelta =
-      transaction.category.natureType === NatureType.INCOME
-        ? -transaction.amount
-        : transaction.amount;
+      tx.category.natureType === NatureType.INCOME
+        ? -tx.amount
+        : tx.amount;
 
     await prisma.account.update({
-      where: { id: transaction.accountId },
+      where: { id: tx.accountId },
       data: {
         balance: {
           increment: balanceDelta,

@@ -269,7 +269,52 @@ export const api = {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      throw new Error(data.message || 'Erro ao inicializar banco de dados no Supabase');
+      throw new Error(data.message || data.error || 'Erro ao inicializar banco de dados no Supabase');
+    }
+    return data;
+  },
+
+  // Autenticação & Sessão
+  async login(credentials: { email: string; password: string }): Promise<{ user: { id: string; name: string; email: string } }> {
+    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.error || data.message || 'Erro ao fazer login.');
+    }
+    return data;
+  },
+
+  async register(payload: { name: string; email: string; password: string }): Promise<{ user: { id: string; name: string; email: string } }> {
+    const res = await fetch(`${API_BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.error || data.message || 'Erro ao criar conta.');
+    }
+    return data;
+  },
+
+  async logout(): Promise<void> {
+    const res = await fetch(`${API_BASE_URL}/auth/logout`, {
+      method: 'POST',
+    });
+    if (!res.ok) {
+      throw new Error('Erro ao fazer logout.');
+    }
+  },
+
+  async getMe(): Promise<{ user: { id: string; name: string; email: string } }> {
+    const res = await fetch(`${API_BASE_URL}/auth/me`);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.error || 'Não autenticado.');
     }
     return data;
   },
