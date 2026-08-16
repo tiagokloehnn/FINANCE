@@ -1,5 +1,5 @@
 -- ==============================================================================
--- SCHEMA SQL PARA SUPABASE (EXECUÇÃO OPCIONAL DIRETO NO SQL EDITOR DO SUPABASE)
+-- SCHEMA SQL PARA SUPABASE (EXECUÇÃO DIRETO NO SQL EDITOR DO SUPABASE)
 -- ==============================================================================
 
 -- 1. Criar Tipos Enum
@@ -20,9 +20,13 @@ CREATE TABLE IF NOT EXISTS "users" (
     "id" TEXT NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
     "email" TEXT NOT NULL UNIQUE,
     "name" TEXT NOT NULL,
+    "password" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Garante que a coluna password exista caso a tabela já tenha sido criada antes
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "password" TEXT;
 
 -- 3. Tabela de Contas Financeiras (accounts)
 CREATE TABLE IF NOT EXISTS "accounts" (
@@ -58,7 +62,9 @@ CREATE TABLE IF NOT EXISTS "transactions" (
     "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Índices recomendados
+-- Índices de performance
 CREATE INDEX IF NOT EXISTS "idx_transactions_date" ON "transactions"("date");
 CREATE INDEX IF NOT EXISTS "idx_transactions_account" ON "transactions"("account_id");
 CREATE INDEX IF NOT EXISTS "idx_transactions_category" ON "transactions"("category_id");
+CREATE INDEX IF NOT EXISTS "idx_accounts_user" ON "accounts"("user_id");
+CREATE INDEX IF NOT EXISTS "idx_categories_user" ON "categories"("user_id");
