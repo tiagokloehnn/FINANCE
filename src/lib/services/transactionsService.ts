@@ -1,6 +1,5 @@
 import { prisma } from '../prisma';
 import { NatureType } from '@prisma/client';
-import { seedUserDatabase } from './seedService';
 
 export interface CreateTransactionDto {
   accountId: string;
@@ -91,6 +90,79 @@ export async function createTransaction(dto: CreateTransactionDto) {
   }
 
   return transaction;
+}
+
+export async function createBatchTransactions(items: CreateTransactionDto[]) {
+  const results = [];
+  for (const item of items) {
+    const created = await createTransaction(item);
+    results.push(created);
+  }
+  return results;
+}
+
+export async function updateTransaction(
+  id: string,
+  data: {
+    amount?: number;
+    description?: string;
+    date?: string;
+    isRealized?: boolean;
+    accountId?: string;
+    categoryId?: string;
+  },
+  userId?: string
+) {
+  const existing = await prisma.transaction.findUnique({
+    where: { id },
+    include: { account: true, category: true },
+  });
+
+  if (!existing) {
+    throw new Error('Transação não encontrada');
+  }
+
+  if (userId && existing.account.userId !== userId) {
+    throw new Error('Não autorizado a alterar esta transação.');
+  }
+
+  // Tratamento de mudança no estado isRealized
+  if (data.isRealized !== undefined && data.isRealized !== existing.isRealized) {
+    const isNowRealized = data.isRealized;
+    const isIncome = existing.category.natureType === NatureType.INCOME;
+
+    if (isNowRealized) {
+      // Passou de Previsto (false) para Realizado (true) -> Aplica no saldo
+      const delta = isIncome ? existing.amount : -existing.amount;
+      await prisma.account.update({
+        where: { id: existing.accountId },
+        data: { balance: { increment: delta } },
+      });
+    } else {
+      // Passou de Realizado (true) para Previsto (false) -> Reverte do saldo
+      const delta = isIncome ? -existing.amount : existing.amount;
+      await prisma.account.update({
+        where: { id: existing.accountId },
+        data: { balance: { increment: delta } },
+      });
+    }
+  }
+
+  return prisma.transaction.update({
+    where: { id },
+    data: {
+      ...(data.amount !== undefined && { amount: data.amount }),
+      ...(data.description !== undefined && { description: data.description.trim() }),
+      ...(data.date !== undefined && { date: new Date(data.date) }),
+      ...(data.isRealized !== undefined && { isRealized: data.isRealized }),
+      ...(data.accountId && { accountId: data.accountId }),
+      ...(data.categoryId && { categoryId: data.categoryId }),
+    },
+    include: {
+      account: true,
+      category: true,
+    },
+  });
 }
 
 export async function getTransactions(filters?: {

@@ -250,6 +250,40 @@ export const api = {
     return data;
   },
 
+  async createBatchTransactions(transactions: CreateTransactionPayload[]): Promise<Transaction[]> {
+    const res = await fetch(`${API_BASE_URL}/transactions/batch`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ transactions }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.message || 'Erro ao processar lote de parcelas');
+    }
+
+    return data;
+  },
+
+  async updateTransaction(id: string, payload: Partial<CreateTransactionPayload>): Promise<Transaction> {
+    const res = await fetch(`${API_BASE_URL}/transactions/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.message || 'Erro ao atualizar transação');
+    }
+
+    return data;
+  },
+
   async deleteTransaction(id: string): Promise<void> {
     const res = await fetch(`${API_BASE_URL}/transactions/${id}`, {
       method: 'DELETE',
@@ -258,6 +292,25 @@ export const api = {
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.message || 'Erro ao deletar transação');
+    }
+  },
+
+  async getCashFlowProjection(months: number = 6): Promise<import('../types/finance').CashFlowProjectionReport> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/reports/projection?months=${months}`);
+      if (!res.ok) {
+        throw new Error('Falha ao obter projeção de fluxo de caixa');
+      }
+      return await res.json();
+    } catch {
+      // Fallback básico
+      return {
+        initialCash: 0,
+        months: [],
+        totalExpectedFutureSpend: 0,
+        totalExpectedFutureIncome: 0,
+        projectedNetSavings: 0,
+      };
     }
   },
 

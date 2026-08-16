@@ -204,3 +204,157 @@ export async function getExecutiveOverview(userId?: string): Promise<ExecutiveOv
     })),
   };
 }
+
+export async function getCashFlowProjection(
+  monthCount: number = 6,
+  userId?: string
+): Promise<import('../../types/finance').CashFlowProjectionReport> {
+  const overview = await getExecutiveOverview(userId);
+  const initialCash = overview.liquidity.totalFreeCash + overview.liquidity.totalEmergencyFund;
+
+  const now = new Date();
+  const months: import('../../types/finance').MonthlyProjection[] = [];
+
+  let rollingCash = initialCash;
+  let totalExpectedFutureSpend = 0;
+  let totalExpectedFutureIncome = 0;
+
+  const monthNames = [
+    'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+    'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez',
+  ];
+
+  for (let i = 0; i < monthCount; i++) {
+    const targetDate = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const year = targetDate.getFullYear();
+    const month = targetDate.getMonth();
+
+    const startOfMonth = new Date(year, month, 1, 0, 0, 0, 0);
+    const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999);
+
+    const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+    const monthLabel = `${monthNames[month]}/${String(year).slice(-2)}`;
+    const isCurrentMonth = i === 0;
+
+    const where: any = {
+      date: {
+        gte: startOfMonth,
+        lte: endOfMonth,
+      },
+    };
+
+    if (userId) {
+      where.account = { userId };
+    }
+
+    const transactions = await prisma.transaction.findMany({
+      where,
+      include: {
+        category: true,
+        account: true,
+      },
+      orderBy: { date: 'asc' },
+    });
+
+    let expectedIncome = 0;
+    let expectedFixedCosts = 0;
+    let expectedVariableCosts = 0;
+    let expectedInvestments = 0;
+    let pendingCount = 0;
+
+    for (const tx of transactions) {
+      if (!tx.isRealized) {
+        pendingCount++;
+      }
+
+      switch (tx.category.natureType) {
+        case NatureType.INCOME:
+          expectedIncome += tx.amount;
+          break;
+        case NatureType.FIXED_COST:
+          expectedFixedCosts += tx.amount;
+          break;
+        case NatureType.VARIABLE_COST:
+          expectedVariableCosts += tx.amount;
+          break;
+        case NatureType.INVESTMENT:
+          expectedInvestments += tx.amount;
+          break;
+      }
+    }
+
+    const totalOutflow = expectedFixedCosts + expectedVariableCosts + expectedInvestments;
+    const netMonthlyResult = expectedIncome - totalOutflow;
+
+    const startingCash = rollingCash;
+    const endingCash = startingCash + netMonthlyResult;
+    rollingCash = endingCash;
+
+    if (i > 0) {
+      totalExpectedFutureSpend += totalOutflow;
+      totalExpectedFutureIncome += expectedIncome;
+    }
+
+    const monthlyBurn = totalOutflow > 0 ? totalOutflow : (overview.metrics.monthlyBurnRate || 1);
+    const runwayMonths = monthlyBurn > 0 ? Number((endingCash / monthlyBurn).toFixed(1)) : 99.9;
+
+    let status: 'EXCELLENT' | 'GOOD' | 'WARNING' | 'CRITICAL' = 'GOOD';
+    if (endingCash < 0) {
+      status = 'CRITICAL';
+    } else if (runwayMonths >= 6) {
+      status = 'EXCELLENT';
+    } else if (runwayMonths >= 3) {
+      status = 'GOOD';
+    } else {
+      status = 'WARNING';
+    }
+
+    months.push({
+      monthKey,
+      monthLabel,
+      isCurrentMonth,
+      startingCash: Number(startingCash.toFixed(2)),
+      expectedIncome: Number(expectedIncome.toFixed(2)),
+      expectedFixedCosts: Number(expectedFixedCosts.toFixed(2)),
+      expectedVariableCosts: Number(expectedVariableCosts.toFixed(2)),
+      expectedInvestments: Number(expectedInvestments.toFixed(2)),
+      totalOutflow: Number(totalOutflow.toFixed(2)),
+      netMonthlyResult: Number(netMonthlyResult.toFixed(2)),
+      endingCash: Number(endingCash.toFixed(2)),
+      runwayMonths: runwayMonths > 0 ? runwayMonths : 0,
+      status,
+      pendingTransactionsCount: pendingCount,
+      transactions: transactions.map((t) => ({
+        id: t.id,
+        accountId: t.accountId,
+        categoryId: t.categoryId,
+        amount: t.amount,
+        date: t.date.toISOString(),
+        description: t.description,
+        isRealized: t.isRealized,
+        account: {
+          id: t.account.id,
+          userId: t.account.userId,
+          name: t.account.name,
+          type: t.account.type,
+          balance: t.account.balance,
+        },
+        category: {
+          id: t.category.id,
+          userId: t.category.userId,
+          name: t.category.name,
+          natureType: t.category.natureType,
+        },
+      })),
+    });
+  }
+
+  return {
+    initialCash: Number(initialCash.toFixed(2)),
+    months,
+    totalExpectedFutureSpend: Number(totalExpectedFutureSpend.toFixed(2)),
+    totalExpectedFutureIncome: Number(totalExpectedFutureIncome.toFixed(2)),
+    projectedNetSavings: Number((totalExpectedFutureIncome - totalExpectedFutureSpend).toFixed(2)),
+  };
+}
+

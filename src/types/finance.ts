@@ -104,3 +104,30 @@ export interface CreateTransactionPayload {
   date?: string;
   isRealized?: boolean;
 }
+
+export interface MonthlyProjection {
+  monthKey: string; // "2026-08"
+  monthLabel: string; // "Ago/26"
+  isCurrentMonth: boolean;
+  startingCash: number;
+  expectedIncome: number;
+  expectedFixedCosts: number;
+  expectedVariableCosts: number;
+  expectedInvestments: number;
+  totalOutflow: number;
+  netMonthlyResult: number;
+  endingCash: number;
+  runwayMonths: number;
+  status: 'EXCELLENT' | 'GOOD' | 'WARNING' | 'CRITICAL';
+  pendingTransactionsCount: number;
+  transactions: Transaction[];
+}
+
+export interface CashFlowProjectionReport {
+  initialCash: number;
+  months: MonthlyProjection[];
+  totalExpectedFutureSpend: number;
+  totalExpectedFutureIncome: number;
+  projectedNetSavings: number;
+}
+
