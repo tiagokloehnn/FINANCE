@@ -4,6 +4,15 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'Finance CFO | Gestão Financeira Pessoal com Governança Corporativa',
   description: 'Controle de finanças pessoais utilizando metodologias corporativas: DRE em cascata, Liquidez Corrente e Runway de sobrevivência.',
+  applicationName: 'Finance CFO',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Finance CFO',
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const viewport: Viewport = {
@@ -11,7 +20,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#070b12',
+  viewportFit: 'cover',
+  themeColor: '#0B0F19',
 };
 
 export default function RootLayout({

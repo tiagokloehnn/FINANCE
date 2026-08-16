@@ -22,6 +22,9 @@ import {
   Sparkles,
   Database,
   CheckCircle,
+  LayoutDashboard,
+  FolderTree,
+  PlusCircle,
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -309,12 +312,38 @@ export default function DashboardPage() {
       />
 
       {/* Footer */}
-
-      <footer className="border-t border-slate-900 bg-slate-950/60 py-5 sm:py-6 px-4 text-center text-xs text-slate-500">
+      <footer className="border-t border-slate-900 bg-slate-950/60 py-5 sm:py-6 px-4 text-center text-xs text-slate-500 mb-16 sm:mb-0">
         <p>
           Finance CFO • Sistema de Gestão Financeira Pessoal com Governança Corporativa • Hospedado 100% no Vercel & Supabase
         </p>
       </footer>
+
+      {/* Mobile Bottom Navigation / Action Bar (PWA & Mobile Native App Feel) */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0d121f]/95 border-t border-slate-800/90 backdrop-blur-lg pb-safe pt-2 px-6 flex items-center justify-around shadow-modal">
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="flex flex-col items-center justify-center text-slate-400 hover:text-white transition active:scale-95 py-1"
+        >
+          <LayoutDashboard className="h-5 w-5 mb-0.5 text-slate-400" />
+          <span className="text-[10px] font-medium">Início</span>
+        </button>
+
+        <button
+          onClick={() => setIsQuickEntryOpen(true)}
+          className="flex items-center justify-center space-x-1.5 px-4 py-2 rounded-xl font-semibold text-xs text-white bg-emerald-600 hover:bg-emerald-500 shadow-sm active:scale-95 -mt-3 border-2 border-[#0d121f]"
+        >
+          <PlusCircle className="h-4 w-4" />
+          <span>Lançamento</span>
+        </button>
+
+        <button
+          onClick={() => setIsManageEntitiesOpen(true)}
+          className="flex flex-col items-center justify-center text-slate-400 hover:text-white transition active:scale-95 py-1"
+        >
+          <FolderTree className="h-5 w-5 mb-0.5 text-slate-400" />
+          <span className="text-[10px] font-medium">Categorias</span>
+        </button>
+      </nav>
     </div>
   );
 }
