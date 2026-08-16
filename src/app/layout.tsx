@@ -10,6 +10,11 @@ export const metadata: Metadata = {
     statusBarStyle: 'black-translucent',
     title: 'Finance CFO',
   },
+  icons: {
+    icon: '/icon-192.png',
+    shortcut: '/icon-192.png',
+    apple: '/apple-touch-icon.png',
+  },
   formatDetection: {
     telephone: false,
   },
