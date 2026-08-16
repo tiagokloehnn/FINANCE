@@ -6,6 +6,7 @@ import { MetricCard } from '../components/MetricCard';
 import { DreTable } from '../components/DreTable';
 import { QuickTransactionForm } from '../components/QuickTransactionForm';
 import { TransactionsList } from '../components/TransactionsList';
+import { ManageEntitiesModal } from '../components/ManageEntitiesModal';
 import {
   DreReport,
   ExecutiveOverview,
@@ -31,8 +32,10 @@ export default function DashboardPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isQuickEntryOpen, setIsQuickEntryOpen] = useState<boolean>(false);
+  const [isManageEntitiesOpen, setIsManageEntitiesOpen] = useState<boolean>(false);
   const [isSeeding, setIsSeeding] = useState<boolean>(false);
   const [seedSuccessMessage, setSeedSuccessMessage] = useState<string | null>(null);
+
 
   const loadData = useCallback(async () => {
     try {
@@ -117,40 +120,54 @@ export default function DashboardPage() {
 
   const runwayBadge = getRunwayBadgeInfo();
 
+  const isMockData =
+    categories.some((c) => c.id.startsWith('c')) ||
+    accounts.some((a) => a.id.startsWith('acc-'));
+
+  const isUninitialized = categories.length === 0 || isMockData;
+
   return (
     <div className="min-h-screen flex flex-col bg-[#070b12] text-slate-100">
       {/* Executive Header */}
       <Header
         netWorth={currentNetWorth}
         onOpenQuickEntry={() => setIsQuickEntryOpen(true)}
+        onOpenManageEntities={() => setIsManageEntitiesOpen(true)}
         onRefresh={loadData}
         isLoading={isLoading}
+        isUninitialized={isUninitialized}
+        onTriggerSeed={handleTriggerSeed}
+        isSeeding={isSeeding}
       />
 
+
       <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-4 sm:space-y-8">
-        {/* Banner de Inicialização Rápida no Supabase (se necessário) */}
-        {categories.length === 0 && (
-          <div className="rounded-2xl bg-gradient-to-r from-cyan-950/70 via-indigo-950/70 to-slate-900 border-2 border-cyan-500/50 p-4 sm:p-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 shadow-glow-cyan">
+        {/* Banner de Inicialização Rápida no Supabase (se necessário ou se usando mock) */}
+        {isUninitialized && (
+          <div className="rounded-2xl bg-gradient-to-r from-cyan-950/80 via-indigo-950/80 to-slate-900 border-2 border-cyan-500/60 p-4 sm:p-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 shadow-glow-cyan animate-fadeIn">
             <div className="flex items-start sm:items-center space-x-3 sm:space-x-4">
               <div className="p-2.5 sm:p-3 rounded-xl bg-cyan-500/20 text-cyan-400 shrink-0">
                 <Database className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
               <div>
-                <h3 className="text-sm sm:text-base font-bold text-white">
-                  Banco de Dados Conectado no Supabase!
+                <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                  <span>Plano de Contas do Supabase</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    Ação Necessária
+                  </span>
                 </h3>
                 <p className="text-[11px] sm:text-xs text-slate-300 mt-0.5">
-                  Clique no botão ao lado para criar o plano de contas e categorias contábeis padrão (DRE, Liquidez, Runway).
+                  Clique no botão ao lado para criar o plano de contas e categorias contábeis padrão (DRE, Liquidez, Runway) no Supabase.
                 </p>
               </div>
             </div>
             <button
               onClick={handleTriggerSeed}
               disabled={isSeeding}
-              className="w-full sm:w-auto px-4 sm:px-5 py-2.5 rounded-xl font-bold text-xs text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 transition shadow-lg whitespace-nowrap disabled:opacity-50 flex items-center justify-center space-x-2 shrink-0"
+              className="w-full sm:w-auto px-4 sm:px-5 py-2.5 rounded-xl font-bold text-xs text-slate-950 bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 transition shadow-lg whitespace-nowrap disabled:opacity-50 flex items-center justify-center space-x-2 shrink-0"
             >
               <Sparkles className="h-4 w-4" />
-              <span>{isSeeding ? 'Inicializando...' : '⚡ Inicializar Categorias Padrão'}</span>
+              <span>{isSeeding ? 'Inicializando no Supabase...' : '⚡ Inicializar Categorias Padrão'}</span>
             </button>
           </div>
         )}
@@ -279,9 +296,21 @@ export default function DashboardPage() {
         categories={categories}
         onSubmitSuccess={loadData}
         onAddTransaction={handleAddTransaction}
+        onOpenManageEntities={() => setIsManageEntitiesOpen(true)}
+      />
+
+
+      {/* MODAL DE GERENCIAMENTO DE CONTAS E CATEGORIAS */}
+      <ManageEntitiesModal
+        isOpen={isManageEntitiesOpen}
+        onClose={() => setIsManageEntitiesOpen(false)}
+        categories={categories}
+        accounts={accounts}
+        onRefresh={loadData}
       />
 
       {/* Footer */}
+
       <footer className="border-t border-slate-900 bg-slate-950/60 py-5 sm:py-6 px-4 text-center text-xs text-slate-500">
         <p>
           Finance CFO • Sistema de Gestão Financeira Pessoal com Governança Corporativa • Hospedado 100% no Vercel & Supabase

@@ -14,7 +14,9 @@ import {
   MinusCircle,
   PiggyBank,
   Check,
+  Sparkles,
 } from 'lucide-react';
+import { api } from '../services/api';
 
 interface QuickTransactionFormProps {
   isOpen: boolean;
@@ -23,6 +25,7 @@ interface QuickTransactionFormProps {
   categories: Category[];
   onSubmitSuccess: () => void;
   onAddTransaction: (payload: CreateTransactionPayload) => Promise<void>;
+  onOpenManageEntities?: () => void;
 }
 
 export function QuickTransactionForm({
@@ -32,7 +35,9 @@ export function QuickTransactionForm({
   categories,
   onSubmitSuccess,
   onAddTransaction,
+  onOpenManageEntities,
 }: QuickTransactionFormProps) {
+
   const [selectedNature, setSelectedNature] = useState<NatureType>('VARIABLE_COST');
   const [amount, setAmount] = useState<string>('');
   const [description, setDescription] = useState<string>('');
@@ -43,6 +48,7 @@ export function QuickTransactionForm({
   });
   const [isRealized, setIsRealized] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isSeedingLocal, setIsSeedingLocal] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Filtra categorias pela natureza selecionada
@@ -52,20 +58,37 @@ export function QuickTransactionForm({
 
   // Atualiza accountId e categoryId padrão quando a lista de categorias/contas mudar
   useEffect(() => {
-    if (accounts.length > 0 && !accountId) {
-      setAccountId(accounts[0].id);
+    if (accounts.length > 0) {
+      if (!accountId || !accounts.some((a) => a.id === accountId)) {
+        setAccountId(accounts[0].id);
+      }
     }
   }, [accounts, accountId]);
 
   useEffect(() => {
     if (filteredCategories.length > 0) {
-      setCategoryId(filteredCategories[0].id);
+      if (!categoryId || !filteredCategories.some((c) => c.id === categoryId)) {
+        setCategoryId(filteredCategories[0].id);
+      }
     } else {
       setCategoryId('');
     }
-  }, [selectedNature, categories]);
+  }, [selectedNature, filteredCategories, categoryId]);
 
   if (!isOpen) return null;
+
+  const handleQuickSeed = async () => {
+    try {
+      setIsSeedingLocal(true);
+      setErrorMsg(null);
+      await api.triggerSeed(false);
+      onSubmitSuccess(); // Recarrega contas e categorias do banco
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Erro ao inicializar plano de contas no Supabase.');
+    } finally {
+      setIsSeedingLocal(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -178,9 +201,27 @@ export function QuickTransactionForm({
           </button>
         </div>
 
+        {/* Alerta de Erro com Botão de Ação Rápida */}
         {errorMsg && (
-          <div className="mt-3 sm:mt-4 p-3 rounded-lg bg-rose-950/50 border border-rose-800 text-xs text-rose-300">
-            {errorMsg}
+          <div className="mt-3 sm:mt-4 p-3.5 rounded-xl bg-rose-950/70 border border-rose-500/50 text-xs text-rose-200 space-y-2.5">
+            <div className="flex items-start space-x-2">
+              <span className="shrink-0 text-base">⚠️</span>
+              <p className="leading-relaxed">{errorMsg}</p>
+            </div>
+            {(errorMsg.includes('Plano de contas') ||
+              errorMsg.includes('não inicializado') ||
+              errorMsg.includes('não encontrada') ||
+              errorMsg.includes('Inicializar')) && (
+              <button
+                type="button"
+                onClick={handleQuickSeed}
+                disabled={isSeedingLocal}
+                className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-bold text-xs transition shadow-lg flex items-center justify-center space-x-2 disabled:opacity-50"
+              >
+                <Sparkles className="h-4 w-4 shrink-0" />
+                <span>{isSeedingLocal ? 'Inicializando no Supabase...' : '⚡ Inicializar Categorias Padrão Agora'}</span>
+              </button>
+            )}
           </div>
         )}
 
@@ -266,9 +307,20 @@ export function QuickTransactionForm({
           {/* Category & Account */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1">
-                Categoria Contábil
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-semibold text-slate-400">
+                  Categoria Contábil
+                </label>
+                {onOpenManageEntities && (
+                  <button
+                    type="button"
+                    onClick={onOpenManageEntities}
+                    className="text-[10px] text-cyan-400 hover:text-cyan-300 transition flex items-center space-x-1"
+                  >
+                    <span>+ Nova</span>
+                  </button>
+                )}
+              </div>
               <select
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
@@ -283,9 +335,20 @@ export function QuickTransactionForm({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1">
-                Conta Financeira
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-semibold text-slate-400">
+                  Conta Financeira
+                </label>
+                {onOpenManageEntities && (
+                  <button
+                    type="button"
+                    onClick={onOpenManageEntities}
+                    className="text-[10px] text-cyan-400 hover:text-cyan-300 transition flex items-center space-x-1"
+                  >
+                    <span>+ Nova</span>
+                  </button>
+                )}
+              </div>
               <select
                 value={accountId}
                 onChange={(e) => setAccountId(e.target.value)}
@@ -299,6 +362,7 @@ export function QuickTransactionForm({
               </select>
             </div>
           </div>
+
 
           {/* Realized Toggle */}
           <div className="flex items-start space-x-2.5 sm:space-x-3 pt-1 sm:pt-2">

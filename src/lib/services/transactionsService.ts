@@ -1,5 +1,6 @@
 import { prisma } from '../prisma';
 import { NatureType } from '@prisma/client';
+import { seedDatabase } from './seedService';
 
 export interface CreateTransactionDto {
   accountId: string;
@@ -11,12 +12,42 @@ export interface CreateTransactionDto {
 }
 
 export async function createTransaction(dto: CreateTransactionDto) {
-  const category = await prisma.category.findUnique({
+  // Se não houver categorias ou contas, auto-seed para garantir prontidão
+  const catCount = await prisma.category.count().catch(() => 0);
+  const accCount = await prisma.account.count().catch(() => 0);
+  if (catCount === 0 || accCount === 0) {
+    await seedDatabase(false);
+  }
+
+  let category = await prisma.category.findUnique({
     where: { id: dto.categoryId },
   });
 
+  // Se o frontend passou um mock ID (ex: c1..c11) ou ID não encontrado, tenta achar pelo nome ou pegar a primeira categoria
   if (!category) {
-    throw new Error(`Categoria com ID ${dto.categoryId} não encontrada`);
+    category = await prisma.category.findFirst({
+      where: { name: { equals: dto.categoryId, mode: 'insensitive' } },
+    });
+  }
+  if (!category) {
+    category = await prisma.category.findFirst();
+  }
+
+  if (!category) {
+    throw new Error(`Categoria não encontrada no banco de dados. Clique em "⚡ Inicializar Categorias Padrão".`);
+  }
+
+  let account = await prisma.account.findUnique({
+    where: { id: dto.accountId },
+  });
+
+  // Se o ID da conta for mock (ex: acc-1..acc-3) ou não encontrado, pega a primeira conta
+  if (!account) {
+    account = await prisma.account.findFirst();
+  }
+
+  if (!account) {
+    throw new Error(`Conta financeira não encontrada no banco de dados. Clique em "⚡ Inicializar Categorias Padrão".`);
   }
 
   const isRealized = dto.isRealized ?? true;
@@ -24,8 +55,8 @@ export async function createTransaction(dto: CreateTransactionDto) {
 
   const transaction = await prisma.transaction.create({
     data: {
-      accountId: dto.accountId,
-      categoryId: dto.categoryId,
+      accountId: account.id,
+      categoryId: category.id,
       amount: dto.amount,
       description: dto.description,
       date,
@@ -45,7 +76,7 @@ export async function createTransaction(dto: CreateTransactionDto) {
         : -dto.amount;
 
     await prisma.account.update({
-      where: { id: dto.accountId },
+      where: { id: account.id },
       data: {
         balance: {
           increment: balanceDelta,

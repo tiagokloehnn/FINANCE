@@ -5,20 +5,30 @@ import {
   Layers,
   PlusCircle,
   RefreshCw,
+  FolderTree,
+  Sparkles,
 } from 'lucide-react';
 
 interface HeaderProps {
   netWorth: number;
   onOpenQuickEntry: () => void;
+  onOpenManageEntities?: () => void;
   onRefresh: () => void;
   isLoading: boolean;
+  isUninitialized?: boolean;
+  onTriggerSeed?: () => void;
+  isSeeding?: boolean;
 }
 
 export function Header({
   netWorth,
   onOpenQuickEntry,
+  onOpenManageEntities,
   onRefresh,
   isLoading,
+  isUninitialized,
+  onTriggerSeed,
+  isSeeding,
 }: HeaderProps) {
   const formattedNetWorth = new Intl.NumberFormat('pt-BR', {
     style: 'currency',
@@ -52,7 +62,7 @@ export function Header({
           </div>
 
           {/* Right Section: Net Worth & CTA */}
-          <div className="flex items-center space-x-2 sm:space-x-4 shrink-0">
+          <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
             {/* Total Net Worth Badge */}
             <div className="hidden lg:flex flex-col items-end px-3.5 py-1.5 rounded-lg bg-slate-900/90 border border-slate-800">
               <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">
@@ -62,6 +72,18 @@ export function Header({
                 {formattedNetWorth}
               </span>
             </div>
+
+            {/* Manage Categories & Accounts */}
+            {onOpenManageEntities && (
+              <button
+                onClick={onOpenManageEntities}
+                className="flex items-center space-x-1.5 px-2.5 py-2 sm:px-3 sm:py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 transition active:scale-95 text-xs font-semibold shrink-0"
+                title="Gerenciar Contas e Categorias Contábeis"
+              >
+                <FolderTree className="h-4 w-4 text-cyan-400 shrink-0" />
+                <span className="hidden md:inline">Contas & Categorias</span>
+              </button>
+            )}
 
             {/* Refresh Button */}
             <button
@@ -74,6 +96,20 @@ export function Header({
                 className={`h-4 w-4 ${isLoading ? 'animate-spin text-cyan-400' : ''}`}
               />
             </button>
+
+            {/* Quick Seed Action in Header if uninitialized */}
+            {isUninitialized && onTriggerSeed && (
+              <button
+                onClick={onTriggerSeed}
+                disabled={isSeeding}
+                className="flex items-center space-x-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl font-bold text-xs text-slate-950 bg-gradient-to-r from-amber-400 to-emerald-400 hover:from-amber-300 hover:to-emerald-300 transition shadow-lg shadow-amber-500/20 active:scale-95 shrink-0 animate-pulse"
+                title="Criar contas e categorias padrão no Supabase"
+              >
+                <Sparkles className="h-4 w-4 text-slate-950 shrink-0" />
+                <span className="hidden sm:inline">{isSeeding ? 'Inicializando...' : '⚡ Inicializar Supabase'}</span>
+                <span className="sm:hidden font-bold">⚡ Inicializar</span>
+              </button>
+            )}
 
             {/* Fast Entry Button */}
             <button
@@ -90,3 +126,4 @@ export function Header({
     </header>
   );
 }
+

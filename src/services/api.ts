@@ -5,7 +5,10 @@ import {
   Account,
   Category,
   CreateTransactionPayload,
+  NatureType,
+  AccountType,
 } from '../types/finance';
+
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || '/api';
@@ -152,25 +155,47 @@ export const api = {
     }
   },
 
-  async createTransaction(payload: CreateTransactionPayload): Promise<Transaction> {
-    try {
-      const res = await fetch(`${API_BASE_URL}/transactions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Erro ao criar transação');
-      }
-
-      return await res.json();
-    } catch (err) {
-      throw err;
+  async createCategory(payload: { name: string; natureType: NatureType }): Promise<Category> {
+    const res = await fetch(`${API_BASE_URL}/categories`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const errorData = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(errorData.message || 'Erro ao criar categoria contábil');
     }
+    return errorData;
+  },
+
+  async createAccount(payload: { name: string; type: AccountType; balance?: number }): Promise<Account> {
+    const res = await fetch(`${API_BASE_URL}/accounts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const errorData = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(errorData.message || 'Erro ao criar conta financeira');
+    }
+    return errorData;
+  },
+
+  async createTransaction(payload: CreateTransactionPayload): Promise<Transaction> {
+    const res = await fetch(`${API_BASE_URL}/transactions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.message || 'Erro ao criar transação');
+    }
+
+    return data;
   },
 
   async deleteTransaction(id: string): Promise<void> {
@@ -179,7 +204,8 @@ export const api = {
     });
 
     if (!res.ok) {
-      throw new Error('Erro ao deletar transação');
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Erro ao deletar transação');
     }
   },
 
@@ -189,7 +215,11 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reset }),
     });
-    if (!res.ok) throw new Error('Erro ao inicializar banco de dados');
-    return await res.json();
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.message || 'Erro ao inicializar banco de dados no Supabase');
+    }
+    return data;
   },
 };
+
