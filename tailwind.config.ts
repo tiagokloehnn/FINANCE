@@ -11,24 +11,22 @@ const config: Config = {
     extend: {
       colors: {
         finance: {
-          dark: '#090D16',
-          card: 'rgba(15, 23, 42, 0.75)',
-          border: 'rgba(51, 65, 85, 0.6)',
+          bg: '#0B0F19',
+          surface: '#111827',
+          surfaceHover: '#1E293B',
+          border: 'rgba(51, 65, 85, 0.5)',
+          borderSubtle: 'rgba(51, 65, 85, 0.3)',
           income: '#10B981', // Emerald
           fixed: '#F43F5E', // Rose
           variable: '#F59E0B', // Amber
           invest: '#6366F1', // Indigo
-          accent: '#06B6D4', // Cyan
+          primary: '#3B82F6', // Blue
         },
       },
-      backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'subtle-grid': 'radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px)',
-      },
       boxShadow: {
-        'glow-cyan': '0 0 25px -5px rgba(6, 182, 212, 0.25)',
-        'glow-emerald': '0 0 25px -5px rgba(16, 185, 129, 0.25)',
-        'glow-indigo': '0 0 25px -5px rgba(99, 102, 241, 0.25)',
+        'subtle': '0 1px 3px 0 rgba(0, 0, 0, 0.25), 0 1px 2px -1px rgba(0, 0, 0, 0.25)',
+        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3)',
+        'modal': '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5)',
       },
     },
   },

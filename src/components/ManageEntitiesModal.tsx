@@ -13,9 +13,6 @@ import {
   Plus,
   FolderPlus,
   Wallet,
-  TrendingUp,
-  CreditCard,
-  Building,
   CheckCircle,
   Tag,
   PiggyBank,
@@ -213,14 +210,14 @@ export function ManageEntitiesModal({
   };
 
   const natureLabels: Record<NatureType, { label: string; bg: string; text: string; border: string }> = {
-    INCOME: { label: 'Receita', bg: 'bg-emerald-950/60', text: 'text-emerald-400', border: 'border-emerald-500/40' },
-    FIXED_COST: { label: 'Custo Fixo', bg: 'bg-rose-950/60', text: 'text-rose-400', border: 'border-rose-500/40' },
-    VARIABLE_COST: { label: 'Custo Variável', bg: 'bg-amber-950/60', text: 'text-amber-400', border: 'border-amber-500/40' },
-    INVESTMENT: { label: 'Investimento', bg: 'bg-cyan-950/60', text: 'text-cyan-400', border: 'border-cyan-500/40' },
+    INCOME: { label: 'Receita', bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
+    FIXED_COST: { label: 'Custo Fixo', bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/20' },
+    VARIABLE_COST: { label: 'Custo Variável', bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20' },
+    INVESTMENT: { label: 'Investimento', bg: 'bg-indigo-500/10', text: 'text-indigo-400', border: 'border-indigo-500/20' },
   };
 
   const accountTypeLabels: Record<AccountType, { label: string; icon: React.ReactNode }> = {
-    CHECKING: { label: 'Conta Corrente / Caixa Livre', icon: <Landmark className="h-4 w-4 text-cyan-400" /> },
+    CHECKING: { label: 'Conta Corrente / Caixa', icon: <Landmark className="h-4 w-4 text-slate-400" /> },
     SAVINGS: { label: 'Reserva de Emergência / CDB DI', icon: <PiggyBank className="h-4 w-4 text-emerald-400" /> },
     INVESTMENT: { label: 'Corretora de Investimentos', icon: <Coins className="h-4 w-4 text-indigo-400" /> },
     CASH: { label: 'Dinheiro Físico', icon: <Wallet className="h-4 w-4 text-amber-400" /> },
@@ -237,20 +234,20 @@ export function ManageEntitiesModal({
   const investmentCount = categories.filter((c) => c.natureType === 'INVESTMENT').length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full max-w-3xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-4 sm:p-6 max-h-[92vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+      <div className="relative w-full max-w-3xl bg-[#111726] border border-slate-800 rounded-2xl shadow-modal p-4 sm:p-6 max-h-[92vh] flex flex-col">
         {/* Header do Modal */}
         <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-slate-800 shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-xl bg-gradient-to-br from-cyan-500/20 to-indigo-500/20 border border-cyan-500/30 text-cyan-400">
-              <FolderPlus className="h-5 w-5" />
+            <div className="p-2.5 rounded-xl bg-slate-800 border border-slate-700/60 text-slate-200">
+              <FolderPlus className="h-5 w-5 text-emerald-400" />
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold text-white">
                 Gerenciar Categorias & Contas
               </h2>
               <p className="text-xs text-slate-400">
-                Crie novos custos variáveis, exclua categorias não utilizadas e personalize sua DRE
+                Organize seu plano de contas, adicione custos variáveis e personalize a DRE
               </p>
             </div>
           </div>
@@ -263,14 +260,14 @@ export function ManageEntitiesModal({
         </div>
 
         {/* Abas Principais */}
-        <div className="flex space-x-2 my-3 sm:my-4 border-b border-slate-800/80 pb-2 shrink-0">
+        <div className="flex space-x-2 my-3 sm:my-4 border-b border-slate-800 pb-2 shrink-0">
           <button
             type="button"
             onClick={() => setActiveTab('categories')}
             className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition ${
               activeTab === 'categories'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                ? 'bg-slate-800 text-white border border-slate-700 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-850'
             }`}
           >
             <Tag className="h-4 w-4" />
@@ -281,25 +278,25 @@ export function ManageEntitiesModal({
             onClick={() => setActiveTab('accounts')}
             className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition ${
               activeTab === 'accounts'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                ? 'bg-slate-800 text-white border border-slate-700 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-850'
             }`}
           >
-            <Building className="h-4 w-4" />
+            <Landmark className="h-4 w-4" />
             <span>Contas Financeiras ({accounts.length})</span>
           </button>
         </div>
 
         {/* Conteúdo com Scroll */}
         <div className="flex-1 overflow-y-auto pr-1 space-y-4">
-          {/* Card de Inicialização / Restauração do Plano Padrão */}
-          <div className="p-3.5 rounded-xl bg-gradient-to-r from-cyan-950/40 via-indigo-950/40 to-slate-900 border border-cyan-500/30 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          {/* Card de Restauração do Plano Padrão */}
+          <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             <div className="flex items-center space-x-2.5">
-              <div className="p-2 rounded-lg bg-cyan-500/20 text-cyan-400 shrink-0">
+              <div className="p-2 rounded-lg bg-amber-400/10 text-amber-400 shrink-0">
                 <Sparkles className="h-4 w-4" />
               </div>
               <div>
-                <h4 className="text-xs font-bold text-white">
+                <h4 className="text-xs font-semibold text-white">
                   Restaurar Plano Padrão (DRE & Liquidez)
                 </h4>
                 <p className="text-[11px] text-slate-400">
@@ -311,7 +308,7 @@ export function ManageEntitiesModal({
               type="button"
               onClick={handleTriggerSeed}
               disabled={isSeeding}
-              className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 transition shadow disabled:opacity-50 flex items-center justify-center space-x-1.5 shrink-0"
+              className="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-900 bg-amber-400 hover:bg-amber-300 transition shadow disabled:opacity-50 flex items-center justify-center space-x-1.5 shrink-0"
             >
               <Sparkles className="h-3.5 w-3.5" />
               <span>{isSeeding ? 'Inicializando...' : '⚡ Restaurar Padrões'}</span>
@@ -321,20 +318,20 @@ export function ManageEntitiesModal({
           {activeTab === 'categories' ? (
             <div className="space-y-4">
               {/* Formulário Nova Categoria */}
-              <form onSubmit={handleCreateCategory} className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3">
-                <div className="flex items-center space-x-2 text-xs font-bold text-white uppercase tracking-wider">
-                  <Plus className="h-4 w-4 text-cyan-400" />
+              <form onSubmit={handleCreateCategory} className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
+                <div className="flex items-center space-x-2 text-xs font-semibold text-white uppercase tracking-wider">
+                  <Plus className="h-4 w-4 text-emerald-400" />
                   <span>Cadastrar Nova Categoria</span>
                 </div>
 
                 {catSuccessMsg && (
-                  <div className="p-2.5 rounded-lg bg-emerald-950/50 border border-emerald-500/40 flex items-center space-x-2 text-emerald-300 text-xs">
+                  <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center space-x-2 text-emerald-300 text-xs">
                     <CheckCircle className="h-4 w-4 text-emerald-400 shrink-0" />
                     <span>{catSuccessMsg}</span>
                   </div>
                 )}
                 {catErrorMsg && (
-                  <div className="p-2.5 rounded-lg bg-rose-950/50 border border-rose-500/40 text-rose-300 text-xs">
+                  <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
                     {catErrorMsg}
                   </div>
                 )}
@@ -350,7 +347,7 @@ export function ManageEntitiesModal({
                       placeholder="Ex: Roupas & Vestuário, Combustível, Streaming..."
                       value={newCatName}
                       onChange={(e) => setNewCatName(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-750 text-white text-xs placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                     />
                   </div>
 
@@ -361,7 +358,7 @@ export function ManageEntitiesModal({
                     <select
                       value={newCatNature}
                       onChange={(e) => setNewCatNature(e.target.value as NatureType)}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-cyan-500"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-750 text-white text-xs focus:outline-none focus:border-emerald-500"
                     >
                       <option value="VARIABLE_COST">Custo Variável (Recomendado)</option>
                       <option value="FIXED_COST">Custo Fixo</option>
@@ -375,7 +372,7 @@ export function ManageEntitiesModal({
                   <button
                     type="submit"
                     disabled={isSubmittingCat}
-                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-950 bg-gradient-to-r from-amber-400 via-teal-300 to-emerald-400 hover:from-amber-300 hover:to-emerald-300 transition shadow disabled:opacity-50 flex items-center space-x-1.5"
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 transition shadow disabled:opacity-50 flex items-center space-x-1.5"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     <span>{isSubmittingCat ? 'Salvando...' : 'Adicionar Categoria'}</span>
@@ -386,24 +383,22 @@ export function ManageEntitiesModal({
               {/* Filtros de Natureza */}
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
                     Categorias Cadastradas ({filteredCategories.length})
                   </h4>
                   <span className="text-[11px] text-slate-400">
-                    Clique na lixeira para excluir as que não estiver usando
+                    Clique na lixeira para excluir categorias não utilizadas
                   </span>
                 </div>
 
                 <div className="flex flex-wrap gap-1.5">
                   <button
                     type="button"
-                    onClick={() => {
-                      setCategoryFilter('ALL');
-                    }}
+                    onClick={() => setCategoryFilter('ALL')}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
                       categoryFilter === 'ALL'
-                        ? 'bg-slate-700 text-white border border-slate-600'
-                        : 'bg-slate-950/60 text-slate-400 hover:text-white border border-slate-800'
+                        ? 'bg-slate-800 text-white border border-slate-700'
+                        : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
                     }`}
                   >
                     Todos ({categories.length})
@@ -416,8 +411,8 @@ export function ManageEntitiesModal({
                     }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 ${
                       categoryFilter === 'VARIABLE_COST'
-                        ? 'bg-amber-950/80 text-amber-300 border border-amber-500/50 shadow-sm'
-                        : 'bg-slate-950/60 text-amber-400/70 hover:text-amber-300 border border-slate-800'
+                        ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                        : 'bg-slate-900 text-amber-400/80 hover:text-amber-300 border border-slate-800'
                     }`}
                   >
                     <span>⚡ Custos Variáveis ({variableCostCount})</span>
@@ -430,8 +425,8 @@ export function ManageEntitiesModal({
                     }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
                       categoryFilter === 'FIXED_COST'
-                        ? 'bg-rose-950/80 text-rose-300 border border-rose-500/50'
-                        : 'bg-slate-950/60 text-rose-400/70 hover:text-rose-300 border border-slate-800'
+                        ? 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
+                        : 'bg-slate-900 text-rose-400/80 hover:text-rose-300 border border-slate-800'
                     }`}
                   >
                     Custos Fixos ({fixedCostCount})
@@ -444,8 +439,8 @@ export function ManageEntitiesModal({
                     }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
                       categoryFilter === 'INCOME'
-                        ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/50'
-                        : 'bg-slate-950/60 text-emerald-400/70 hover:text-emerald-300 border border-slate-800'
+                        ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                        : 'bg-slate-900 text-emerald-400/80 hover:text-emerald-300 border border-slate-800'
                     }`}
                   >
                     Receitas ({incomeCount})
@@ -458,8 +453,8 @@ export function ManageEntitiesModal({
                     }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
                       categoryFilter === 'INVESTMENT'
-                        ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-500/50'
-                        : 'bg-slate-950/60 text-cyan-400/70 hover:text-cyan-300 border border-slate-800'
+                        ? 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/30'
+                        : 'bg-slate-900 text-indigo-400/80 hover:text-indigo-300 border border-slate-800'
                     }`}
                   >
                     Investimentos ({investmentCount})
@@ -482,19 +477,19 @@ export function ManageEntitiesModal({
                       return (
                         <div
                           key={cat.id}
-                          className="p-3 rounded-xl bg-slate-950 border border-cyan-500/60 space-y-2"
+                          className="p-3 rounded-xl bg-slate-900 border border-emerald-500/50 space-y-2"
                         >
                           <input
                             type="text"
                             value={editCatName}
                             onChange={(e) => setEditCatName(e.target.value)}
-                            className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-cyan-500"
+                            className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-750 text-white text-xs focus:outline-none focus:border-emerald-500"
                           />
                           <div className="flex items-center justify-between gap-2">
                             <select
                               value={editCatNature}
                               onChange={(e) => setEditCatNature(e.target.value as NatureType)}
-                              className="px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 text-white text-[11px]"
+                              className="px-2 py-1 rounded-lg bg-slate-950 border border-slate-750 text-white text-[11px]"
                             >
                               <option value="VARIABLE_COST">Custo Variável</option>
                               <option value="FIXED_COST">Custo Fixo</option>
@@ -513,7 +508,7 @@ export function ManageEntitiesModal({
                                 type="button"
                                 onClick={() => handleSaveEditCat(cat.id)}
                                 disabled={isUpdatingCat}
-                                className="p-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold hover:bg-emerald-400"
+                                className="p-1.5 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-500"
                               >
                                 <Check className="h-4 w-4" />
                               </button>
@@ -526,7 +521,7 @@ export function ManageEntitiesModal({
                     return (
                       <div
                         key={cat.id}
-                        className="p-2.5 sm:p-3 rounded-xl bg-slate-950/50 border border-slate-800/90 hover:border-slate-700 transition flex items-center justify-between gap-2 group"
+                        className="p-2.5 sm:p-3 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition flex items-center justify-between gap-2 group"
                       >
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-semibold text-slate-200 truncate">
@@ -534,11 +529,11 @@ export function ManageEntitiesModal({
                           </p>
                           <div className="flex items-center space-x-2 mt-0.5">
                             <span
-                              className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${badge.bg} ${badge.text} ${badge.border}`}
+                              className={`text-[9px] font-semibold px-1.5 py-0.5 rounded border ${badge.bg} ${badge.text} ${badge.border}`}
                             >
                               {badge.label}
                             </span>
-                            <span className="text-[10px] text-slate-500">
+                            <span className="text-[10px] text-slate-400">
                               {txCount === 0 ? 'Sem lançamentos' : `${txCount} lançamento(s)`}
                             </span>
                           </div>
@@ -550,7 +545,7 @@ export function ManageEntitiesModal({
                             type="button"
                             onClick={() => handleStartEditCat(cat)}
                             title="Editar Categoria"
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-slate-900 transition"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </button>
@@ -573,20 +568,20 @@ export function ManageEntitiesModal({
           ) : (
             <div className="space-y-4">
               {/* Formulário Nova Conta */}
-              <form onSubmit={handleCreateAccount} className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3">
-                <div className="flex items-center space-x-2 text-xs font-bold text-white uppercase tracking-wider">
-                  <Plus className="h-4 w-4 text-cyan-400" />
+              <form onSubmit={handleCreateAccount} className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
+                <div className="flex items-center space-x-2 text-xs font-semibold text-white uppercase tracking-wider">
+                  <Plus className="h-4 w-4 text-emerald-400" />
                   <span>Cadastrar Nova Conta Financeira</span>
                 </div>
 
                 {accSuccessMsg && (
-                  <div className="p-2.5 rounded-lg bg-emerald-950/50 border border-emerald-500/40 flex items-center space-x-2 text-emerald-300 text-xs">
+                  <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center space-x-2 text-emerald-300 text-xs">
                     <CheckCircle className="h-4 w-4 text-emerald-400 shrink-0" />
                     <span>{accSuccessMsg}</span>
                   </div>
                 )}
                 {accErrorMsg && (
-                  <div className="p-2.5 rounded-lg bg-rose-950/50 border border-rose-500/40 text-rose-300 text-xs">
+                  <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
                     {accErrorMsg}
                   </div>
                 )}
@@ -602,7 +597,7 @@ export function ManageEntitiesModal({
                       placeholder="Ex: Nubank, BTG Pactual, Inter, Carteira..."
                       value={newAccName}
                       onChange={(e) => setNewAccName(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-750 text-white text-xs placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                     />
                   </div>
 
@@ -613,10 +608,10 @@ export function ManageEntitiesModal({
                     <select
                       value={newAccType}
                       onChange={(e) => setNewAccType(e.target.value as AccountType)}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-cyan-500"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-750 text-white text-xs focus:outline-none focus:border-emerald-500"
                     >
                       <option value="CHECKING">Conta Corrente (Caixa)</option>
-                      <option value="SAVINGS">Reserva / Poupança</option>
+                      <option value="SAVINGS">Reserva / CDB</option>
                       <option value="INVESTMENT">Investimentos</option>
                       <option value="CASH">Dinheiro Vivo</option>
                     </select>
@@ -627,7 +622,7 @@ export function ManageEntitiesModal({
                   <button
                     type="submit"
                     disabled={isSubmittingAcc}
-                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 transition shadow disabled:opacity-50 flex items-center space-x-1.5"
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 transition shadow disabled:opacity-50 flex items-center space-x-1.5"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     <span>{isSubmittingAcc ? 'Salvando...' : 'Adicionar Conta'}</span>
@@ -637,20 +632,20 @@ export function ManageEntitiesModal({
 
               {/* Lista de Contas Existentes */}
               <div className="mt-4">
-                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
                   Contas Cadastradas ({accounts.length})
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {accounts.map((acc) => {
-                    const typeInfo = accountTypeLabels[acc.type] || { label: acc.type, icon: <Building className="h-4 w-4" /> };
+                    const typeInfo = accountTypeLabels[acc.type] || { label: acc.type, icon: <Landmark className="h-4 w-4" /> };
                     const txCount = acc._count?.transactions ?? 0;
                     return (
                       <div
                         key={acc.id}
-                        className="p-3 rounded-xl bg-slate-950/50 border border-slate-800/90 flex items-center justify-between gap-2 group hover:border-slate-700 transition"
+                        className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-between gap-2 group hover:border-slate-700 transition"
                       >
                         <div className="flex items-center space-x-2.5 min-w-0">
-                          <div className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 shrink-0">
+                          <div className="p-1.5 rounded-lg bg-slate-800 border border-slate-700/60 shrink-0">
                             {typeInfo.icon}
                           </div>
                           <div className="min-w-0">
@@ -663,7 +658,7 @@ export function ManageEntitiesModal({
                           </div>
                         </div>
                         <div className="flex items-center space-x-2 shrink-0">
-                          <span className="text-xs font-bold font-mono-numbers text-cyan-400">
+                          <span className="text-xs font-semibold font-mono-numbers text-emerald-400">
                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(acc.balance)}
                           </span>
                           <button

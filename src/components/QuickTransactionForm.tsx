@@ -122,19 +122,17 @@ export function QuickTransactionForm({
     e.preventDefault();
     setErrorMsg(null);
 
-    const numericAmount = parseFloat(amount.replace(',', '.'));
-    if (isNaN(numericAmount) || numericAmount <= 0) {
-      setErrorMsg('Informe um valor monetário válido e maior que zero.');
-      return;
-    }
+    // Converte vírgula para ponto no valor monetário
+    const cleanAmount = amount.replace(/\./g, '').replace(',', '.');
+    const parsedAmount = parseFloat(cleanAmount);
 
-    if (!description.trim()) {
-      setErrorMsg('Informe uma descrição para o lançamento.');
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      setErrorMsg('Informe um valor monetário válido maior que zero.');
       return;
     }
 
     if (!accountId) {
-      setErrorMsg('Selecione a conta bancária/financeira.');
+      setErrorMsg('Selecione uma conta bancária.');
       return;
     }
 
@@ -146,21 +144,25 @@ export function QuickTransactionForm({
     try {
       setIsSubmitting(true);
       await onAddTransaction({
-        accountId,
-        categoryId,
-        amount: numericAmount,
-        description: description.trim(),
+        amount: parsedAmount,
+        description,
         date: new Date(date).toISOString(),
         isRealized,
+        accountId,
+        categoryId,
       });
 
-      // Limpa formulário e fecha
+      // Reset form
       setAmount('');
       setDescription('');
-      onSubmitSuccess();
       onClose();
+      onSubmitSuccess();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Erro ao registrar o lançamento.');
+      console.error('Erro ao registrar transação:', err);
+      setErrorMsg(
+        err?.message ||
+          'Erro ao salvar transação. Verifique se as categorias contábeis estão criadas.',
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -177,47 +179,47 @@ export function QuickTransactionForm({
       type: 'INCOME',
       label: 'Receita',
       icon: <TrendingUp className="h-4 w-4" />,
-      colorClasses: 'hover:border-emerald-500/50 hover:bg-emerald-950/20 text-emerald-400',
-      activeClasses: 'border-emerald-500 bg-emerald-950/50 text-emerald-300 ring-1 ring-emerald-500',
+      colorClasses: 'hover:border-emerald-500/40 hover:bg-emerald-500/5 text-emerald-400',
+      activeClasses: 'border-emerald-500/60 bg-emerald-500/10 text-emerald-300 font-semibold',
     },
     {
       type: 'FIXED_COST',
       label: 'Custo Fixo',
       icon: <MinusCircle className="h-4 w-4" />,
-      colorClasses: 'hover:border-rose-500/50 hover:bg-rose-950/20 text-rose-400',
-      activeClasses: 'border-rose-500 bg-rose-950/50 text-rose-300 ring-1 ring-rose-500',
+      colorClasses: 'hover:border-rose-500/40 hover:bg-rose-500/5 text-rose-400',
+      activeClasses: 'border-rose-500/60 bg-rose-500/10 text-rose-300 font-semibold',
     },
     {
       type: 'VARIABLE_COST',
       label: 'Custo Variável',
       icon: <MinusCircle className="h-4 w-4" />,
-      colorClasses: 'hover:border-amber-500/50 hover:bg-amber-950/20 text-amber-400',
-      activeClasses: 'border-amber-500 bg-amber-950/50 text-amber-300 ring-1 ring-amber-500',
+      colorClasses: 'hover:border-amber-500/40 hover:bg-amber-500/5 text-amber-400',
+      activeClasses: 'border-amber-500/60 bg-amber-500/10 text-amber-300 font-semibold',
     },
     {
       type: 'INVESTMENT',
       label: 'Investimento',
       icon: <PiggyBank className="h-4 w-4" />,
-      colorClasses: 'hover:border-indigo-500/50 hover:bg-indigo-950/20 text-indigo-400',
-      activeClasses: 'border-indigo-500 bg-indigo-950/50 text-indigo-300 ring-1 ring-indigo-500',
+      colorClasses: 'hover:border-indigo-500/40 hover:bg-indigo-500/5 text-indigo-400',
+      activeClasses: 'border-indigo-500/60 bg-indigo-500/10 text-indigo-300 font-semibold',
     },
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn overflow-y-auto">
-      <div className="relative w-full max-w-lg bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-y-auto max-h-[92vh] p-4 sm:p-7 my-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-fadeIn overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-[#111726] border border-slate-800 rounded-2xl shadow-modal overflow-y-auto max-h-[92vh] p-4 sm:p-6 my-auto">
         {/* Header */}
         <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-slate-800">
           <div className="flex items-center space-x-2.5 min-w-0">
-            <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 shrink-0">
+            <div className="p-2 rounded-xl bg-slate-800 text-emerald-400 shrink-0">
               <PlusCircle className="h-5 w-5" />
             </div>
             <div className="min-w-0">
               <h2 className="text-sm sm:text-base font-bold text-white truncate">
-                Lançamento Financeiro Rápido
+                Lançamento Financeiro
               </h2>
               <p className="text-[10px] sm:text-xs text-slate-400 truncate">
-                Classificação automática para apuração de DRE
+                Classificação contábil para apuração automática de DRE
               </p>
             </div>
           </div>
@@ -231,7 +233,7 @@ export function QuickTransactionForm({
 
         {/* Alerta de Erro com Botão de Ação Rápida */}
         {errorMsg && (
-          <div className="mt-3 sm:mt-4 p-3.5 rounded-xl bg-rose-950/70 border border-rose-500/50 text-xs text-rose-200 space-y-2.5">
+          <div className="mt-3 sm:mt-4 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-300 space-y-2.5">
             <div className="flex items-start space-x-2">
               <span className="shrink-0 text-base">⚠️</span>
               <p className="leading-relaxed">{errorMsg}</p>
@@ -244,7 +246,7 @@ export function QuickTransactionForm({
                 type="button"
                 onClick={handleQuickSeed}
                 disabled={isSeedingLocal}
-                className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-bold text-xs transition shadow-lg flex items-center justify-center space-x-2 disabled:opacity-50"
+                className="w-full py-2.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition shadow flex items-center justify-center space-x-2 disabled:opacity-50"
               >
                 <Sparkles className="h-4 w-4 shrink-0" />
                 <span>{isSeedingLocal ? 'Inicializando no Supabase...' : '⚡ Inicializar Categorias Padrão Agora'}</span>
@@ -268,7 +270,7 @@ export function QuickTransactionForm({
                   className={`flex flex-col items-center justify-center py-2 px-1.5 sm:py-2.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-medium transition ${
                     selectedNature === item.type
                       ? item.activeClasses
-                      : `border-slate-800 bg-slate-950/40 text-slate-400 ${item.colorClasses}`
+                      : `border-slate-800 bg-slate-900/60 text-slate-400 ${item.colorClasses}`
                   }`}
                 >
                   <span className="mb-1">{item.icon}</span>
@@ -285,18 +287,16 @@ export function QuickTransactionForm({
                 Valor (R$)
               </label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 font-mono-numbers text-sm">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-mono text-xs">
                   R$
                 </span>
                 <input
-                  type="number"
-                  step="0.01"
-                  min="0.01"
+                  type="text"
                   required
                   placeholder="0,00"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="w-full pl-9 sm:pl-10 pr-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono-numbers font-bold placeholder-slate-600 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-sm sm:text-base"
+                  className="w-full pl-9 sm:pl-10 pr-3 py-2.5 rounded-xl bg-slate-900 border border-slate-750 text-white font-mono-numbers font-semibold placeholder-slate-600 focus:outline-none focus:border-emerald-500 text-sm sm:text-base"
                 />
               </div>
             </div>
@@ -311,7 +311,7 @@ export function QuickTransactionForm({
                   required
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs sm:text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                  className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-750 text-white text-xs sm:text-sm focus:outline-none focus:border-emerald-500"
                 />
               </div>
             </div>
@@ -328,7 +328,7 @@ export function QuickTransactionForm({
               placeholder="Ex: Aluguel mensal, Supermercado, Aporte FIIs..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs sm:text-sm placeholder-slate-600 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+              className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-750 text-white text-xs sm:text-sm placeholder-slate-600 focus:outline-none focus:border-emerald-500"
             />
           </div>
 
@@ -343,7 +343,7 @@ export function QuickTransactionForm({
                   <button
                     type="button"
                     onClick={() => setIsCreatingQuickCat(!isCreatingQuickCat)}
-                    className="text-[10px] text-cyan-400 hover:text-cyan-300 font-semibold transition flex items-center space-x-1"
+                    className="text-[10px] text-emerald-400 hover:text-emerald-300 font-semibold transition flex items-center space-x-1"
                   >
                     <span>{isCreatingQuickCat ? 'Cancelar' : '+ Nova Rápida'}</span>
                   </button>
@@ -365,16 +365,16 @@ export function QuickTransactionForm({
                   <input
                     type="text"
                     autoFocus
-                    placeholder="Nome da nova categoria..."
+                    placeholder="Nome da categoria..."
                     value={quickCatName}
                     onChange={(e) => setQuickCatName(e.target.value)}
-                    className="w-full px-2.5 py-2 rounded-xl bg-slate-950 border border-cyan-500 text-white text-xs placeholder-slate-500 focus:outline-none"
+                    className="w-full px-2.5 py-2 rounded-xl bg-slate-900 border border-emerald-500 text-white text-xs placeholder-slate-500 focus:outline-none"
                   />
                   <button
                     type="button"
                     onClick={handleQuickCreateCategory}
                     disabled={isSubmittingQuickCat || !quickCatName.trim()}
-                    className="px-3 py-2 rounded-xl text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 transition shadow disabled:opacity-50 shrink-0"
+                    className="px-3 py-2 rounded-xl text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 transition shadow disabled:opacity-50 shrink-0"
                   >
                     {isSubmittingQuickCat ? '...' : 'Criar'}
                   </button>
@@ -383,7 +383,7 @@ export function QuickTransactionForm({
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                  className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-750 text-white text-xs focus:outline-none focus:border-emerald-500"
                 >
                   {filteredCategories.length === 0 ? (
                     <option value="">Nenhuma categoria encontrada - Clique em + Nova</option>
@@ -407,7 +407,7 @@ export function QuickTransactionForm({
                   <button
                     type="button"
                     onClick={onOpenManageEntities}
-                    className="text-[10px] text-cyan-400 hover:text-cyan-300 transition flex items-center space-x-1"
+                    className="text-[10px] text-emerald-400 hover:text-emerald-300 transition flex items-center space-x-1"
                   >
                     <span>+ Nova</span>
                   </button>
@@ -416,7 +416,7 @@ export function QuickTransactionForm({
               <select
                 value={accountId}
                 onChange={(e) => setAccountId(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-750 text-white text-xs focus:outline-none focus:border-emerald-500"
               >
                 {accounts.map((a) => (
                   <option key={a.id} value={a.id}>
@@ -429,13 +429,13 @@ export function QuickTransactionForm({
 
 
           {/* Realized Toggle */}
-          <div className="flex items-start space-x-2.5 sm:space-x-3 pt-1 sm:pt-2">
+          <div className="flex items-start space-x-2.5 sm:space-x-3 pt-1">
             <input
               type="checkbox"
               id="isRealized"
               checked={isRealized}
               onChange={(e) => setIsRealized(e.target.checked)}
-              className="h-4 w-4 mt-0.5 rounded border-slate-700 bg-slate-950 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-slate-900 shrink-0"
+              className="h-4 w-4 mt-0.5 rounded border-slate-700 bg-slate-900 text-emerald-500 focus:ring-emerald-500 shrink-0"
             />
             <label htmlFor="isRealized" className="text-[11px] sm:text-xs text-slate-300 cursor-pointer">
               Lançamento já liquidado / realizado (impacta saldo de caixa imediatamente)
@@ -447,14 +447,14 @@ export function QuickTransactionForm({
             <button
               type="button"
               onClick={onClose}
-              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 text-xs font-semibold text-slate-300 hover:bg-slate-700 transition text-center"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 text-xs font-semibold text-slate-300 hover:bg-slate-700 hover:text-white transition text-center"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold text-xs text-slate-950 bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 transition shadow-lg shadow-cyan-500/20 disabled:opacity-50 flex items-center justify-center space-x-2"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-semibold text-xs text-white bg-emerald-600 hover:bg-emerald-500 transition shadow-sm disabled:opacity-50 flex items-center justify-center space-x-2"
             >
               {isSubmitting ? (
                 <span>Gravando...</span>
